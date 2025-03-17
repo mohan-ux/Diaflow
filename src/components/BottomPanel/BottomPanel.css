@@ -1,0 +1,97 @@
+.bottom-panel {
+  background-color: var(--panel-background);
+  border-top: 1px solid var(--border-color);
+  transition: height 0.3s ease;
+  overflow: hidden;
+}
+
+.bottom-panel.expanded {
+  height: 200px;
+}
+
+.bottom-panel.collapsed {
+  height: 40px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  height: 40px;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.property-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.property-tab {
+  padding: 8px 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  border-bottom: 2px solid transparent;
+}
+
+.property-tab.active {
+  border-bottom: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.properties-container {
+  height: calc(100% - 80px);
+  overflow-y: auto;
+  padding: 10px 15px;
+}
+
+.property-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.property-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.property-row label {
+  font-size: 0.8rem;
+  color: var(--text-color);
+}
+
+.property-row input,
+.property-row select {
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.property-row input[type="color"] {
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.property-row input[type="number"] {
+  width: 100%;
+}
