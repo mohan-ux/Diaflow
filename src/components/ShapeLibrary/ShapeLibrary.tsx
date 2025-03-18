@@ -11,11 +11,32 @@ import ShapeSearch from "./ShapeSearch";
 import Scratchpad from "./Scratchpad";
 import ShapeItem from "./ShapeItem";
 import "./ShapeLibrary.css";
+import {
+  FaSearch,
+  FaChevronDown,
+  FaSquare,
+  FaCircle,
+  FaDiamond,
+  FaRegDotCircle,
+} from "react-icons/fa";
+import { BsTriangle, BsHexagon, BsOctagon, BsStarFill } from "react-icons/bs";
 
 interface ShapeLibraryProps {
   onShapeSelect?: (shape: Shape) => void;
   onShapeDragStart?: (shape: Shape, event: React.DragEvent) => void;
 }
+
+// Shape definitions with their icon components
+const BASIC_SHAPES = [
+  { id: "rectangle", icon: <FaSquare />, name: "Rectangle" },
+  { id: "circle", icon: <FaCircle />, name: "Circle" },
+  { id: "diamond", icon: <FaDiamond />, name: "Diamond" },
+  { id: "triangle", icon: <BsTriangle />, name: "Triangle" },
+  { id: "hexagon", icon: <BsHexagon />, name: "Hexagon" },
+  { id: "octagon", icon: <BsOctagon />, name: "Octagon" },
+  { id: "star", icon: <BsStarFill />, name: "Star" },
+  { id: "ellipse", icon: <FaRegDotCircle />, name: "Ellipse" },
+];
 
 /**
  * Main component for the shape library
@@ -41,6 +62,14 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [showMoreShapesDialog, setShowMoreShapesDialog] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState<{
+    [key: string]: boolean;
+  }>({
+    "Basic Shapes": true,
+    Flowchart: false,
+    UML: false,
+  });
 
   // Initialize built-in libraries if none exist
   useEffect(() => {
@@ -117,8 +146,76 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
     new Set(visibleLibraries.map((lib) => lib.category))
   ) as ShapeCategoryType[];
 
+  // Toggle category expansion
+  const toggleCategory = (category: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
+  // Filter shapes based on search
+  const filteredShapes = BASIC_SHAPES.filter((shape) =>
+    shape.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle drag start for shapes
+  const onDragStart = (
+    event: React.DragEvent<HTMLDivElement>,
+    shapeId: string
+  ) => {
+    // Set data for dragging
+    event.dataTransfer.setData("application/reactflow", `shape:${shapeId}`);
+    event.dataTransfer.effectAllowed = "move";
+  };
+
   return (
     <div className="shape-library">
+      <div className="search-container">
+        <FaSearch className="search-icon" />
+        <input
+          type="text"
+          placeholder="Search shapes"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+      </div>
+
+      <div className="categories">
+        <div className="category">
+          <div
+            className="category-header"
+            onClick={() => toggleCategory("Basic Shapes")}
+          >
+            <h3>Basic Shapes</h3>
+            <FaChevronDown
+              className={`category-arrow ${
+                expandedCategories["Basic Shapes"] ? "expanded" : ""
+              }`}
+            />
+          </div>
+
+          {expandedCategories["Basic Shapes"] && (
+            <div className="shapes-grid">
+              {filteredShapes.map((shape) => (
+                <div
+                  key={shape.id}
+                  className="shape-item"
+                  draggable
+                  onDragStart={(e) => onDragStart(e, shape.id)}
+                >
+                  <div className="shape-icon">{shape.icon}</div>
+                  <div className="shape-name">{shape.name}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Additional categories can be added here */}
+      </div>
+
       <ShapeSearch
         onSearch={handleSearch}
         availableCategories={availableCategories}

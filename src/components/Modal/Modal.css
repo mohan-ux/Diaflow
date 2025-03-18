@@ -1,0 +1,274 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.modal-content {
+  padding: 20px;
+}
+
+/* Template selection */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.template-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.template-card:hover {
+  border-color: #2684ff;
+  background-color: #f5f9ff;
+}
+
+.template-card.selected {
+  border-color: #2684ff;
+  background-color: #f0f7ff;
+  box-shadow: 0 0 0 1px #2684ff;
+}
+
+.template-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #2684ff;
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.template-info {
+  flex: 1;
+}
+
+.template-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+}
+
+.template-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Form elements */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #2684ff;
+  box-shadow: 0 0 0 1px #2684ff;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-button,
+.create-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button {
+  background-color: transparent;
+  border: 1px solid #e0e0e0;
+  color: #666;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.create-button {
+  background-color: #2684ff;
+  border: 1px solid #2684ff;
+  color: white;
+}
+
+.create-button:hover:not(:disabled) {
+  background-color: #1a73e8;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+  .modal-container {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+  }
+
+  .modal-header {
+    border-bottom: 1px solid #333;
+  }
+
+  .close-button {
+    color: #aaa;
+  }
+
+  .close-button:hover {
+    background-color: #333;
+    color: #fff;
+  }
+
+  .template-card {
+    border-color: #333;
+  }
+
+  .template-card:hover {
+    border-color: #4d9eff;
+    background-color: rgba(38, 132, 255, 0.1);
+  }
+
+  .template-card.selected {
+    border-color: #4d9eff;
+    background-color: rgba(38, 132, 255, 0.15);
+    box-shadow: 0 0 0 1px #4d9eff;
+  }
+
+  .template-info p {
+    color: #aaa;
+  }
+
+  textarea {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+
+  textarea:focus {
+    border-color: #4d9eff;
+    box-shadow: 0 0 0 1px #4d9eff;
+  }
+
+  .error-message {
+    background-color: rgba(211, 47, 47, 0.2);
+  }
+
+  .cancel-button {
+    border-color: #444;
+    color: #ccc;
+  }
+
+  .cancel-button:hover:not(:disabled) {
+    background-color: #333;
+    color: #fff;
+  }
+}

@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 import "./Canvas.css";
 import ReactFlow, {
   Background,
@@ -8,12 +14,15 @@ import ReactFlow, {
   NodeTypes,
   useReactFlow,
   BackgroundVariant,
-  Node,
-  Edge,
   OnSelectionChangeParams,
   NodeDragHandler,
   ConnectionLineType,
   Connection,
+  MarkerType,
+  NodeMouseHandler,
+  type Node,
+  type Edge,
+  ConnectionMode,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { Shape } from "../../types/shapes";
@@ -26,13 +35,19 @@ import {
   onEdgesChange,
   onConnect,
 } from "../../store/useFlowStore";
+import PureSVGNode, { PureSVGNodeData } from "./nodes/PureSVGNode";
+import { ShapeNodeData } from "../../interfaces/types";
 
 // Define custom node types
-const nodeTypes: NodeTypes = {
-  shapeNode: ShapeNode,
-};
+const nodeTypes = useMemo(
+  () => ({
+    shapeNode: ShapeNode,
+    pureSvg: PureSVGNode,
+  }),
+  []
+);
 
-const Canvas: React.FC = () => {
+const EnhancedCanvas: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedTool, setSelectedTool] = useState<string>("select");
@@ -61,6 +76,195 @@ const Canvas: React.FC = () => {
 
   // Track Ctrl key press for multi-selection
   const [isCtrlPressed, setIsCtrlPressed] = useState<boolean>(false);
+
+  // Implement a proper onConnect handler that works correctly
+  const onConnect = useCallback(
+    (params: Connection) => {
+      console.log("Connection created:", params);
+
+      // Create a unique ID for the edge
+      const edgeId = `edge-${uuidv4()}`;
+
+      // Add the edge with proper styling for visibility
+      const newEdge = {
+        id: edgeId,
+        ...params,
+        type: "step",
+        animated: false,
+        style: {
+          stroke: "#666666",
+          strokeWidth: 2,
+        },
+        markerEnd: MarkerType.Arrow,
+        data: {
+          edgeType: "normal",
+        },
+      };
+
+      // Add the edge to the flow
+      addEdge(newEdge as unknown as CustomEdge);
+    },
+    [addEdge]
+  );
+
+  // Add context menu support
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    nodeId?: string;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
+
+  // Context menu handler
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node | null) => {
+      event.preventDefault();
+
+      if (node) {
+        // Show context menu for node
+        setContextMenu({
+          visible: true,
+          x: event.clientX,
+          y: event.clientY,
+          nodeId: node.id,
+        });
+        console.log("Context menu opened for node:", node.id);
+      } else {
+        // Show context menu for canvas
+        setContextMenu({
+          visible: true,
+          x: event.clientX,
+          y: event.clientY,
+        });
+        console.log("Context menu opened for canvas");
+      }
+    },
+    []
+  );
+
+  // Close context menu
+  const closeContextMenu = useCallback(() => {
+    setContextMenu({
+      visible: false,
+      x: 0,
+      y: 0,
+    });
+  }, []);
+
+  // Bring selected nodes to front
+  const bringToFront = useCallback(
+    (nodeIds: string[]) => {
+      const highestZ = Math.max(
+        ...nodes.map((n) => (n.style?.zIndex as number) || 0)
+      );
+      nodeIds.forEach((id) => {
+        const node = nodes.find((n) => n.id === id);
+        if (node) {
+          updateNode(id, {
+            style: {
+              ...node.style,
+              zIndex: highestZ + 1,
+            },
+          });
+        }
+      });
+    },
+    [nodes, updateNode]
+  );
+
+  // Send selected nodes to back
+  const sendToBack = useCallback(
+    (nodeIds: string[]) => {
+      const lowestZ = Math.min(
+        ...nodes.map((n) => (n.style?.zIndex as number) || 0)
+      );
+      nodeIds.forEach((id) => {
+        const node = nodes.find((n) => n.id === id);
+        if (node) {
+          updateNode(id, {
+            style: {
+              ...node.style,
+              zIndex: lowestZ - 1,
+            },
+          });
+        }
+      });
+    },
+    [nodes, updateNode]
+  );
+
+  // Handle bring to front button click
+  const handleBringToFront = useCallback(() => {
+    if (selectedElements.nodes.length > 0) {
+      bringToFront(selectedElements.nodes.map((n) => n.id));
+    }
+  }, [selectedElements.nodes, bringToFront]);
+
+  // Handle send to back button click
+  const handleSendToBack = useCallback(() => {
+    if (selectedElements.nodes.length > 0) {
+      sendToBack(selectedElements.nodes.map((n) => n.id));
+    }
+  }, [selectedElements.nodes, sendToBack]);
+
+  // Context menu options for nodes
+  const handleContextMenuAction = useCallback(
+    (action: string) => {
+      console.log("Context menu action:", action);
+
+      if (contextMenu.nodeId) {
+        // Handle node actions
+        switch (action) {
+          case "cut":
+            // Implementation for cutting node
+            console.log("Cut node:", contextMenu.nodeId);
+            break;
+          case "copy":
+            // Implementation for copying node
+            console.log("Copy node:", contextMenu.nodeId);
+            break;
+          case "delete":
+            // Delete the node
+            removeNode(contextMenu.nodeId);
+            console.log("Delete node:", contextMenu.nodeId);
+            break;
+          case "bringToFront":
+            // Bring node to front
+            bringToFront([contextMenu.nodeId]);
+            console.log("Bring to front:", contextMenu.nodeId);
+            break;
+          case "sendToBack":
+            // Send node to back
+            sendToBack([contextMenu.nodeId]);
+            console.log("Send to back:", contextMenu.nodeId);
+            break;
+          default:
+            break;
+        }
+      }
+
+      closeContextMenu();
+    },
+    [contextMenu.nodeId, removeNode, bringToFront, sendToBack]
+  );
+
+  // Close context menu when clicking elsewhere
+  useEffect(() => {
+    const handleClick = () => {
+      if (contextMenu.visible) {
+        closeContextMenu();
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, [contextMenu.visible, closeContextMenu]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -229,55 +433,62 @@ const Canvas: React.FC = () => {
 
   // Handle drop event for shapes from the library
   const onDrop = useCallback(
-    (event: React.DragEvent) => {
+    (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
 
-      if (reactFlowWrapper.current && reactFlowInstance) {
+      if (reactFlowWrapper.current) {
         const reactFlowBounds =
           reactFlowWrapper.current.getBoundingClientRect();
+        const type = event.dataTransfer.getData("application/reactflow");
 
-        // Get the shape data from the drag event
-        try {
-          const shapeData = event.dataTransfer.getData("application/json");
-          if (shapeData) {
-            const shape = JSON.parse(shapeData) as Shape;
+        // Check if the dropped element is a node
+        if (typeof type === "string" && type) {
+          const position = reactFlowInstance!.project({
+            x: event.clientX - reactFlowBounds.left,
+            y: event.clientY - reactFlowBounds.top,
+          });
 
-            // Get the position of the drop
-            const position = reactFlowInstance.project({
-              x: event.clientX - reactFlowBounds.left,
-              y: event.clientY - reactFlowBounds.top,
-            });
+          // Create shape data based on dropped type
+          let nodeData: ShapeNodeData | PureSVGNodeData;
+          let nodeType: string;
 
-            // Apply snap to grid if enabled
-            const snappedPosition = snapToGrid
+          // Use PureSVGNode for shapes to get clean rendering
+          if (type.includes("shape:")) {
+            const shapeType = type.split(":")[1]; // Extract shape type
+            nodeType = "pureSvg";
+            nodeData = {
+              shape: shapeType as PureSVGNodeData["shape"],
+              label: `${
+                shapeType.charAt(0).toUpperCase() + shapeType.slice(1)
+              }`,
+              fill: "#ffffff",
+              stroke: "#000000",
+              strokeWidth: 2,
+            };
+          } else {
+            // Fallback to regular shape node for other types
+            nodeType = "shapeNode";
+            nodeData = {
+              label: "Node",
+              shape: type,
+            };
+          }
+
+          // Create a new node with grid-snapped position
+          const newNode: Node = {
+            id: `node-${uuidv4()}`,
+            type: nodeType,
+            position: snapToGrid
               ? {
                   x: Math.round(position.x / gridSize) * gridSize,
                   y: Math.round(position.y / gridSize) * gridSize,
                 }
-              : position;
+              : position,
+            data: nodeData,
+          };
 
-            // Create a new node with the shape data
-            const newNode: CustomNode = {
-              id: `node-${uuidv4()}`,
-              type: "shapeNode",
-              position: snappedPosition,
-              data: {
-                label: shape.name,
-                html: shape.svg,
-                shape,
-              },
-              shapeData: shape,
-            };
-
-            // Add the node to the store
-            addNode(newNode);
-
-            console.log(
-              `Added node at position (${snappedPosition.x}, ${snappedPosition.y})`
-            );
-          }
-        } catch (error) {
-          console.error("Error handling dropped shape:", error);
+          // Add the new node to the flow
+          addNode(newNode);
         }
       }
     },
@@ -302,7 +513,54 @@ const Canvas: React.FC = () => {
   // Handle drag over to enable drop
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+    event.stopPropagation();
+
+    // Set the correct drop effect
+    event.dataTransfer.dropEffect = "copy";
+
+    console.log("Drag over event", event.type, {
+      clientX: event.clientX,
+      clientY: event.clientY,
+      types: Array.from(event.dataTransfer.types),
+    });
+
+    // Add visual indication of drop target to the container element
+    if (reactFlowWrapper.current) {
+      reactFlowWrapper.current.classList.add("drag-over");
+    }
+  }, []);
+
+  // Handle drag leave
+  const onDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log("Drag leave event", event.type);
+
+    // Remove visual indication when leaving drop target
+    if (reactFlowWrapper.current) {
+      reactFlowWrapper.current.classList.remove("drag-over");
+    }
+  }, []);
+
+  // Handle drag enter
+  const onDragEnter = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    console.log("Drag enter event", event.type);
+
+    // Visual indication for entering the drop zone
+    if (reactFlowWrapper.current) {
+      reactFlowWrapper.current.classList.add("drag-enter");
+
+      // Remove the class after a short delay
+      setTimeout(() => {
+        if (reactFlowWrapper.current) {
+          reactFlowWrapper.current.classList.remove("drag-enter");
+        }
+      }, 300);
+    }
   }, []);
 
   // Handle tool selection
@@ -382,34 +640,6 @@ const Canvas: React.FC = () => {
     [setSelectedElements]
   );
 
-  // Bring selected node to front
-  const bringToFront = useCallback(() => {
-    if (selectedElements.nodes.length === 1) {
-      const node = selectedElements.nodes[0];
-      const highestZ = Math.max(...nodes.map((n) => n.style?.zIndex || 0));
-      updateNode(node.id, {
-        style: {
-          ...node.style,
-          zIndex: highestZ + 1,
-        },
-      });
-    }
-  }, [selectedElements, nodes, updateNode]);
-
-  // Send selected node to back
-  const sendToBack = useCallback(() => {
-    if (selectedElements.nodes.length === 1) {
-      const node = selectedElements.nodes[0];
-      const lowestZ = Math.min(...nodes.map((n) => n.style?.zIndex || 0));
-      updateNode(node.id, {
-        style: {
-          ...node.style,
-          zIndex: lowestZ - 1,
-        },
-      });
-    }
-  }, [selectedElements, nodes, updateNode]);
-
   return (
     <div className="canvas-container" ref={reactFlowWrapper}>
       <ReactFlow
@@ -424,6 +654,8 @@ const Canvas: React.FC = () => {
         }}
         onDrop={onDrop}
         onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDragEnter={onDragEnter}
         onSelectionChange={onSelectionChange}
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
@@ -437,13 +669,23 @@ const Canvas: React.FC = () => {
         snapGrid={[gridSize, gridSize]}
         deleteKeyCode="Delete"
         multiSelectionKeyCode="Control"
-        connectionLineType={ConnectionLineType.SmoothStep}
-        connectionLineStyle={{ stroke: "#999", strokeWidth: 2 }}
-        defaultEdgeOptions={{
-          type: "smoothstep",
-          style: { stroke: "#999", strokeWidth: 2 },
-          animated: false,
+        connectionMode={ConnectionMode.Loose}
+        connectionLineType={ConnectionLineType.Step}
+        connectionLineStyle={{
+          stroke: "#1a73e8",
+          strokeWidth: 2,
+          strokeDasharray: "5,5",
         }}
+        defaultEdgeOptions={{
+          type: "step",
+          style: {
+            stroke: "#666666",
+            strokeWidth: 2,
+          },
+          markerEnd: MarkerType.Arrow,
+        }}
+        onNodeContextMenu={(event, node) => handleContextMenu(event, node)}
+        onPaneContextMenu={(event) => handleContextMenu(event, null)}
       >
         {showGrid && (
           <Background
@@ -516,7 +758,7 @@ const Canvas: React.FC = () => {
               <svg width="16" height="16" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
-                  d="M15,3L13.5,4.5L15,6V3M3,9H6L4.5,10.5L3,9M21,9V10.5L19.5,9H21M8,21V18L9.5,19.5L8,21M3,3H8V8H3V3M16,3H21V8H16V3M3,16H8V21H3V16M16,16H21V21H16V16Z"
+                  d="M15,3L13.5,4.5L15,6V3M3,9H6L4.5,10.5L3,9M21,9V10.5L19.5,9H21M8,21V18L9.5,19.5L8,21M3,3H8V8H3V3M16,3H21V8H16V3M3,16H8V21H3V16M16,16H21V21H16V16M3,16V20H8V16H4M10,16V20H14V16H10M16,16V20H20V16H16M4,16V20H8V16H4M10,16V20H14V16H10M16,16V20H20V16H16Z"
                 />
               </svg>
             </button>
@@ -531,7 +773,7 @@ const Canvas: React.FC = () => {
               <svg width="16" height="16" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
-                  d="M4,2H20A2,2 0 0,1 22,4V20A2,2 0 0,1 20,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2M4,4V8H8V4H4M10,4V8H14V4H10M16,4V8H20V4H16M4,10V14H8V10H4M10,10V14H14V10H10M16,10V14H20V10H16M4,16V20H8V16H4M10,16V20H14V16H10M16,16V20H20V16H16Z"
+                  d="M4,2H20A2,2 0 0,1 22,4V20A2,2 0 0,1 20,22H4A2,2 0 0,1 2,20V4A2,2 0 0,1 4,2M4,4V8H8V4H4M10,4V8H14V4H10M16,4V8H20V4H16M4,10V14H8V10H4M10,10V14H14V10H10M16,10V14H20V10H16M4,16V20H8V16H4M10,16V20H14V16H10M16,16V20H20V16H16M4,16V20H8V16H4M10,16V20H14V16H10M16,16V20H20V16H16Z"
                 />
               </svg>
             </button>
@@ -576,11 +818,16 @@ const Canvas: React.FC = () => {
           <div className="tool-group">
             <button
               className="canvas-tool"
-              onClick={bringToFront}
-              title="Bring to Front (PgUp)"
-              disabled={selectedElements.nodes.length !== 1}
+              onClick={handleBringToFront}
+              title="Bring to Front"
+              disabled={selectedElements.nodes.length === 0}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
                 <path
                   fill="currentColor"
                   d="M2,2H16V16H2V2M22,8V22H8V18H18V8H22Z"
@@ -589,15 +836,19 @@ const Canvas: React.FC = () => {
             </button>
             <button
               className="canvas-tool"
-              onClick={sendToBack}
-              title="Send to Back (PgDown)"
-              disabled={selectedElements.nodes.length !== 1}
+              onClick={handleSendToBack}
+              title="Send to Back"
+              disabled={selectedElements.nodes.length === 0}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
                 <path
                   fill="currentColor"
                   d="M2,2H16V16H2V2M22,8V22H8V18H18V8H22Z"
-                  transform="rotate(180 12 12)"
                 />
               </svg>
             </button>
@@ -613,7 +864,7 @@ const Canvas: React.FC = () => {
               <svg width="16" height="16" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
-                  d="M3,5H9V11H3V5M5,7V9H7V7H5M11,7H21V9H11V7M11,15H21V17H11V15M5,13V15H7V13H5M3,13H9V19H3V13Z"
+                  d="M3,5H9V11H3V5M5,7V9H7V7H5M11,7H21V9H11V7M11,15H21V17H11V15M5,20L1.5,16.5L2.91,15.09L5,17.17L9.59,12.59L11,14L5,20Z"
                 />
               </svg>
             </button>
@@ -626,7 +877,7 @@ const Canvas: React.FC = () => {
               <svg width="16" height="16" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
-                  d="M11,13H21V15H11V13M11,9H21V11H11V9M11,17H21V19H11V17M11,5H21V7H11V5M3,5V19H9V5H3M5,7H7V17H5V7Z"
+                  d="M11,13H21V11H11M11,9H21V7H11M3,5V9H7V5H3M5,7V7.9H5M11,17H21V15H11M3,11V15H7V11H3M5,13V13.9H5M3,17V21H7V17H3M5,19V19.9H5Z"
                 />
               </svg>
             </button>
@@ -663,8 +914,49 @@ const Canvas: React.FC = () => {
 
         <Controls showInteractive={false} />
       </ReactFlow>
+
+      {/* Context Menu */}
+      {contextMenu.visible && (
+        <div
+          className="context-menu"
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 1000,
+          }}
+        >
+          <ul>
+            {contextMenu.nodeId ? (
+              // Node context menu
+              <>
+                <li onClick={() => handleContextMenuAction("cut")}>Cut</li>
+                <li onClick={() => handleContextMenuAction("copy")}>Copy</li>
+                <li onClick={() => handleContextMenuAction("delete")}>
+                  Delete
+                </li>
+                <li className="divider"></li>
+                <li onClick={() => handleContextMenuAction("bringToFront")}>
+                  Bring to Front
+                </li>
+                <li onClick={() => handleContextMenuAction("sendToBack")}>
+                  Send to Back
+                </li>
+              </>
+            ) : (
+              // Canvas context menu
+              <>
+                <li onClick={() => handleContextMenuAction("paste")}>Paste</li>
+                <li onClick={() => handleContextMenuAction("selectAll")}>
+                  Select All
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Canvas;
+export default EnhancedCanvas;

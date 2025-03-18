@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Shape } from "../../types/shapes";
 import "./ShapeLibrary.css";
 
@@ -18,6 +18,8 @@ const ShapeItem: React.FC<ShapeItemProps> = ({
   onDragStart,
   isSelected = false,
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleClick = () => {
     if (onClick) {
       onClick(shape);
@@ -25,20 +27,50 @@ const ShapeItem: React.FC<ShapeItemProps> = ({
   };
 
   const handleDragStart = (event: React.DragEvent) => {
-    if (onDragStart) {
-      onDragStart(shape, event);
+    setIsDragging(true);
+    console.log("ShapeItem drag started for:", shape.name);
+
+    // In case the parent doesn't handle it, we'll set up drag data here too
+    if (!onDragStart) {
+      try {
+        const shapeData = JSON.stringify(shape);
+        console.log("ShapeItem setting drag data directly");
+
+        // Set multiple formats for better compatibility
+        event.dataTransfer.setData("application/json", shapeData);
+        event.dataTransfer.setData("text/plain", shapeData);
+
+        // Set a simple version as well
+        event.dataTransfer.setData("text/x-shape", shape.name);
+
+        // Set a custom debug flag
+        event.dataTransfer.setData("text/x-diaflow", "ShapeItem-drag");
+
+        // Set the effect
+        event.dataTransfer.effectAllowed = "copy";
+      } catch (error) {
+        console.error("Error in ShapeItem direct drag handling:", error);
+      }
     } else {
-      // Default drag behavior
-      event.dataTransfer.setData("application/json", JSON.stringify(shape));
+      // Let the parent handle it
+      onDragStart(shape, event);
     }
+  };
+
+  const handleDragEnd = () => {
+    console.log("ShapeItem drag ended for:", shape.name);
+    setIsDragging(false);
   };
 
   return (
     <div
-      className={`shape-item ${isSelected ? "selected" : ""}`}
+      className={`shape-item ${isSelected ? "selected" : ""} ${
+        isDragging ? "dragging" : ""
+      }`}
       onClick={handleClick}
-      draggable
+      draggable="true"
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       title={shape.name}
       data-shape-id={shape.id}
       data-shape-category={shape.category}

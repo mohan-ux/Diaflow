@@ -1,191 +1,220 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import "./RightPanel.css";
-import useAIAssistant, { AICapability } from "../../hooks/useAIAssistant";
-import {
-  validateOpenAIKey,
-  isApiKeyPresent,
-} from "../../utils/apiKeyValidator";
-import { openAIConfig } from "../../config/apiConfig";
+import useFlowStore from "../../store/useFlowStore";
+import { generateDiagramFromPrompt } from "../../services/geminiService";
 
 const RightPanel: React.FC = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState("ai-assistant");
   const [prompt, setPrompt] = useState("");
-  const [selectedCapability, setSelectedCapability] =
-    useState<AICapability | null>(null);
-  const [isKeyValid, setIsKeyValid] = useState<boolean | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [messages, setMessages] = useState<
+    Array<{ type: "user" | "ai"; content: string }>
+  >([
+    {
+      type: "ai",
+      content:
+        "Hello! I'm your AI diagram assistant. How can I help you create a diagram today?",
+    },
+  ]);
 
-  const { messages, isLoading, error, sendMessage } = useAIAssistant();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { setNodes, setEdges } = useFlowStore();
 
-  // Validate the API key on component mount
-  useEffect(() => {
-    const checkApiKey = async () => {
-      if (!isApiKeyPresent("REACT_APP_OPENAI_API_KEY")) {
-        setIsKeyValid(false);
-        return;
-      }
-
-      setIsValidating(true);
-      try {
-        const isValid = await validateOpenAIKey(openAIConfig.apiKey);
-        setIsKeyValid(isValid);
-      } catch (error) {
-        console.error("Error validating API key:", error);
-        setIsKeyValid(false);
-      } finally {
-        setIsValidating(false);
-      }
-    };
-
-    checkApiKey();
-  }, []);
-
-  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPrompt(e.target.value);
+  // Toggle panel collapse
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
-  const handleSubmit = () => {
-    if (!prompt.trim() || !isKeyValid) return;
+  // Handle tab selection
+  const handleTabSelect = (tab: string) => {
+    setActiveTab(tab);
+  };
 
-    sendMessage(prompt, selectedCapability || undefined);
+  // Handle prompt submission
+  const handlePromptSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!prompt.trim() || isGenerating) return;
+
+    // Add user message
+    const userPrompt = prompt.trim();
+    setMessages((prev) => [...prev, { type: "user", content: userPrompt }]);
     setPrompt("");
-  };
+    setIsGenerating(true);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
+    try {
+      // Add "thinking" message
+      setMessages((prev) => [
+        ...prev,
+        { type: "ai", content: "Generating diagram..." },
+      ]);
+
+      // Call Gemini API to generate a diagram
+      const diagramData = await generateDiagramFromPrompt(userPrompt);
+
+      // Remove "thinking" message and add response
+      setMessages((prev) => [
+        ...prev.slice(0, prev.length - 1),
+        {
+          type: "ai",
+          content:
+            "I've created a diagram based on your request. You can see it on the canvas now.",
+        },
+      ]);
+
+      // Update the canvas with new nodes and edges
+      if (diagramData && diagramData.nodes && diagramData.edges) {
+        setNodes(diagramData.nodes);
+        setEdges(diagramData.edges);
+      }
+    } catch (error) {
+      console.error("Error generating diagram:", error);
+
+      // Remove "thinking" message and add error message
+      setMessages((prev) => [
+        ...prev.slice(0, prev.length - 1),
+        {
+          type: "ai",
+          content:
+            "Sorry, I encountered an error while generating your diagram. Please try again with a different prompt.",
+        },
+      ]);
+    } finally {
+      setIsGenerating(false);
+      // Scroll to the bottom of the chat
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     }
   };
 
-  const handleCapabilityClick = (capability: AICapability) => {
-    setSelectedCapability(
-      capability === selectedCapability ? null : capability
-    );
+  // Scroll to bottom when messages change
+  React.useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Render current tab content
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "ai-assistant":
+        return (
+          <div className="ai-assistant">
+            <div className="chat-messages">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`message ${
+                    message.type === "user" ? "user-message" : "ai-message"
+                  }`}
+                >
+                  <div className="message-content">{message.content}</div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+            <form className="prompt-form" onSubmit={handlePromptSubmit}>
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Describe the diagram you want to create..."
+                disabled={isGenerating}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handlePromptSubmit(e);
+                  }
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isGenerating || !prompt.trim()}
+                className="submit-button"
+              >
+                {isGenerating ? "Generating..." : "Generate"}
+              </button>
+            </form>
+          </div>
+        );
+
+      case "code-generator":
+        return (
+          <div className="code-generator">
+            <h3>Code Generator</h3>
+            <p>Generate code from your diagram</p>
+            <div className="code-options">
+              <button className="code-option">Generate JavaScript</button>
+              <button className="code-option">Generate Python</button>
+              <button className="code-option">Generate Java</button>
+            </div>
+            <div className="code-output">
+              <div className="code-placeholder">
+                Select a diagram element and generate code to see the output
+                here.
+              </div>
+            </div>
+          </div>
+        );
+
+      case "notes":
+        return (
+          <div className="notes-panel">
+            <h3>Notes</h3>
+            <textarea
+              placeholder="Add notes about your diagram here..."
+              className="notes-textarea"
+            />
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="right-panel">
+    <div className={`right-panel ${isCollapsed ? "collapsed" : ""}`}>
       <div className="panel-header">
-        <h3>AI Assistant</h3>
-        {isKeyValid === false && (
-          <div className="api-key-warning">
-            ⚠️ Invalid or missing OpenAI API key
-          </div>
-        )}
-      </div>
-
-      <div className="ai-capabilities">
+        <h2>Assistant</h2>
         <button
-          className={`capability-button ${
-            selectedCapability === "text-to-diagram" ? "active" : ""
-          }`}
-          onClick={() => handleCapabilityClick("text-to-diagram")}
-          disabled={!isKeyValid}
+          className="collapse-button"
+          onClick={toggleCollapse}
+          aria-label={isCollapsed ? "Expand panel" : "Collapse panel"}
         >
-          Text → Diagram
-        </button>
-        <button
-          className={`capability-button ${
-            selectedCapability === "diagram-to-code" ? "active" : ""
-          }`}
-          onClick={() => handleCapabilityClick("diagram-to-code")}
-          disabled={!isKeyValid}
-        >
-          Diagram → Code
-        </button>
-        <button
-          className={`capability-button ${
-            selectedCapability === "code-to-diagram" ? "active" : ""
-          }`}
-          onClick={() => handleCapabilityClick("code-to-diagram")}
-          disabled={!isKeyValid}
-        >
-          Code → Diagram
-        </button>
-        <button
-          className={`capability-button ${
-            selectedCapability === "improve-diagram" ? "active" : ""
-          }`}
-          onClick={() => handleCapabilityClick("improve-diagram")}
-          disabled={!isKeyValid}
-        >
-          Improve Diagram
+          {isCollapsed ? "←" : "→"}
         </button>
       </div>
 
-      <div className="ai-conversation">
-        {isValidating && (
-          <div className="ai-message loading-message">
-            Validating OpenAI API key...
-            <div className="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+      {!isCollapsed && (
+        <>
+          <div className="panel-tabs">
+            <button
+              className={`panel-tab ${
+                activeTab === "ai-assistant" ? "active" : ""
+              }`}
+              onClick={() => handleTabSelect("ai-assistant")}
+            >
+              AI Assistant
+            </button>
+            <button
+              className={`panel-tab ${
+                activeTab === "code-generator" ? "active" : ""
+              }`}
+              onClick={() => handleTabSelect("code-generator")}
+            >
+              Code Gen
+            </button>
+            <button
+              className={`panel-tab ${activeTab === "notes" ? "active" : ""}`}
+              onClick={() => handleTabSelect("notes")}
+            >
+              Notes
+            </button>
           </div>
-        )}
 
-        {isKeyValid === false && !isValidating && (
-          <div className="ai-message error-message">
-            <p>
-              OpenAI API key is invalid or missing. Please add a valid API key
-              to the .env file:
-            </p>
-            <pre>REACT_APP_OPENAI_API_KEY=your_api_key_here</pre>
-            <p>Then restart the application.</p>
-          </div>
-        )}
-
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`ai-message ${
-              message.role === "user" ? "user-message" : ""
-            }`}
-          >
-            {message.content}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="ai-message loading-message">
-            <div className="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="ai-message error-message">Error: {error}</div>
-        )}
-      </div>
-
-      <div className="ai-input">
-        <textarea
-          placeholder={
-            selectedCapability
-              ? `Enter ${
-                  selectedCapability === "text-to-diagram"
-                    ? "description for diagram"
-                    : selectedCapability === "code-to-diagram"
-                    ? "code to visualize"
-                    : "your request"
-                }...`
-              : "Ask AI to create a diagram or analyze your current diagram..."
-          }
-          value={prompt}
-          onChange={handlePromptChange}
-          onKeyDown={handleKeyDown}
-          disabled={isLoading || !isKeyValid}
-        />
-        <button
-          className="send-button"
-          onClick={handleSubmit}
-          disabled={!prompt.trim() || isLoading || !isKeyValid}
-        >
-          {isLoading ? "Sending..." : "Send"}
-        </button>
-      </div>
+          <div className="panel-content">{renderTabContent()}</div>
+        </>
+      )}
     </div>
   );
 };

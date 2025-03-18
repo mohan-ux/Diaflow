@@ -5,7 +5,6 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  User,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -125,7 +124,7 @@ export const logOut = async () => {
  * Get the current authenticated user
  * @returns Current user or null if not authenticated
  */
-export const getCurrentUser = (): User | null => {
+export const getCurrentUser = (): any | null => {
   if (!auth) {
     throw new Error("Firebase not initialized");
   }
@@ -138,7 +137,7 @@ export const getCurrentUser = (): User | null => {
  * @param callback Function to call when auth state changes
  * @returns Unsubscribe function
  */
-export const onAuthChange = (callback: (user: User | null) => void) => {
+export const onAuthChange = (callback: (user: any | null) => void) => {
   if (!auth) {
     throw new Error("Firebase not initialized");
   }
@@ -209,16 +208,16 @@ export const getDiagram = async (diagramId: string) => {
  */
 export const subscribeToDiagram = (
   diagramId: string,
-  callback: (data: any) => void
+  callback: (data: any | null) => void
 ) => {
   if (!db) {
     throw new Error("Firebase not initialized");
   }
 
   const diagramRef = doc(db, "diagrams", diagramId);
-  return onSnapshot(diagramRef, (doc) => {
-    if (doc.exists()) {
-      callback(doc.data());
+  return onSnapshot(diagramRef, (docSnapshot: any) => {
+    if (docSnapshot.exists()) {
+      callback(docSnapshot.data());
     } else {
       callback(null);
     }
@@ -240,12 +239,12 @@ export const getUserDiagrams = async (userId: string) => {
       collection(db, "diagrams"),
       where("userId", "==", userId)
     );
-    const unsubscribe = onSnapshot(diagramsQuery, (querySnapshot) => {
+    const unsubscribe = onSnapshot(diagramsQuery, (querySnapshot: any) => {
       const diagrams: any[] = [];
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach((docSnapshot: any) => {
         diagrams.push({
-          id: doc.id,
-          ...doc.data(),
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
         });
       });
       return diagrams;

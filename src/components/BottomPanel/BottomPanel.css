@@ -27,12 +27,27 @@
   color: var(--text-color);
 }
 
-.toggle-button {
+.panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-button,
+.lock-button {
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-color);
   font-size: 1rem;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.toggle-button:hover,
+.lock-button:hover {
+  background-color: var(--hover-color);
 }
 
 .property-tabs {
@@ -47,6 +62,12 @@
   cursor: pointer;
   color: var(--text-color);
   border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.property-tab:hover {
+  background-color: var(--hover-color);
 }
 
 .property-tab.active {
@@ -70,6 +91,7 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  margin-bottom: 10px;
 }
 
 .property-row label {
@@ -94,4 +116,58 @@
 
 .property-row input[type="number"] {
   width: 100%;
+}
+
+.property-row input[disabled] {
+  background-color: var(--disabled-background, #f5f5f5);
+  color: var(--disabled-text, #999);
+  cursor: not-allowed;
+}
+
+.checkbox-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: auto;
+  margin-left: auto;
+}
+
+.no-selection-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 40px);
+  color: var(--text-muted, #777);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Dark theme adjustments */
+.dark-theme .bottom-panel {
+  background-color: #222;
+  border-color: #444;
+}
+
+.dark-theme .property-row input,
+.dark-theme .property-row select {
+  background-color: #333;
+  border-color: #555;
+  color: #eee;
+}
+
+.dark-theme .property-row input[disabled] {
+  background-color: #2a2a2a;
+  color: #666;
+}
+
+.dark-theme .toggle-button,
+.dark-theme .lock-button {
+  color: #ccc;
+}
+
+.dark-theme .no-selection-message {
+  color: #666;
 }

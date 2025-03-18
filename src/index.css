@@ -19,6 +19,7 @@ code {
 
 :root {
   --primary-color: #4a6ee0;
+  --primary-hover-color: #3d5dc8;
   --secondary-color: #6c8eef;
   --accent-color: #f45e61;
   --background-color: #f8f9fa;
@@ -31,6 +32,7 @@ code {
 
 .dark-theme {
   --primary-color: #5d7ce4;
+  --primary-hover-color: #4a6ad0;
   --secondary-color: #7d9df5;
   --accent-color: #f67376;
   --background-color: #1e1e1e;

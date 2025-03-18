@@ -1,0 +1,85 @@
+/* Remove all visible container traces */
+.pure-svg-node {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  min-height: 60px;
+  overflow: visible;
+}
+
+/* Only show outline when selected */
+.pure-svg-node.selected {
+  outline: 1px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+/* Make connection handles appear only when needed */
+.pure-svg-node .connection-handle {
+  width: 10px;
+  height: 10px;
+  background-color: #00a8ff;
+  border: 2px solid white;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  cursor: crosshair;
+}
+
+.pure-svg-node:hover .connection-handle {
+  opacity: 1;
+}
+
+.pure-svg-node.selected .connection-handle {
+  opacity: 1;
+}
+
+.pure-svg-node .connection-handle:hover {
+  transform: scale(1.5);
+  opacity: 1 !important;
+}
+
+/* Position connection handles correctly */
+.pure-svg-node .connection-handle.top {
+  top: -6px;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+.pure-svg-node .connection-handle.right {
+  right: -6px;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+.pure-svg-node .connection-handle.bottom {
+  bottom: -6px;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+.pure-svg-node .connection-handle.left {
+  left: -6px;
+  top: 50%;
+  transform: translate(0, -50%);
+}
+
+/* Hide target handles but keep them functional */
+.pure-svg-node .connection-handle[id$="-target"] {
+  opacity: 0 !important;
+  pointer-events: all;
+}
+
+/* Improve SVG rendering */
+.pure-svg-node svg {
+  overflow: visible;
+  pointer-events: none;
+}
