@@ -167,11 +167,12 @@ const LeftPanel: React.FC = () => {
   return (
     <div className={`left-panel ${isCollapsed ? "collapsed" : ""}`}>
       <div className="panel-header">
-        <h2>Library</h2>
+        {!isCollapsed && <h2>Library</h2>}
         <button
           className="collapse-button"
           onClick={toggleCollapse}
           aria-label={isCollapsed ? "Expand panel" : "Collapse panel"}
+          title={isCollapsed ? "Expand panel" : "Collapse panel"}
         >
           {isCollapsed ? "→" : "←"}
         </button>

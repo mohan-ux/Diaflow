@@ -1,0 +1,21 @@
+.custom-node {
+  padding: 10px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #ddd;
+  width: 150px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.custom-node.selected {
+  border: 2px solid #4a6ee0;
+  box-shadow: 0 0 10px rgba(74, 110, 224, 0.5);
+}
+
+.custom-node-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40px;
+}

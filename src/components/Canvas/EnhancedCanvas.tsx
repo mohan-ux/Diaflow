@@ -38,14 +38,11 @@ import {
 import PureSVGNode, { PureSVGNodeData } from "./nodes/PureSVGNode";
 import { ShapeNodeData } from "../../interfaces/types";
 
-// Define custom node types
-const nodeTypes = useMemo(
-  () => ({
-    shapeNode: ShapeNode,
-    pureSvg: PureSVGNode,
-  }),
-  []
-);
+// Define custom node types as a constant object instead of using useMemo at the top level
+const NODE_TYPES = {
+  shapeNode: ShapeNode,
+  pureSvg: PureSVGNode,
+};
 
 const EnhancedCanvas: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -451,31 +448,38 @@ const EnhancedCanvas: React.FC = () => {
           // Create shape data based on dropped type
           let nodeData: ShapeNodeData | PureSVGNodeData;
           let nodeType: string;
+          let backgroundColor = "#ffffff";
+          let borderColor = "#000000";
+          let borderWidth = 2;
 
           // Use PureSVGNode for shapes to get clean rendering
           if (type.includes("shape:")) {
             const shapeType = type.split(":")[1]; // Extract shape type
             nodeType = "pureSvg";
-            nodeData = {
-              shape: shapeType as PureSVGNodeData["shape"],
+            const pureSvgNodeData: PureSVGNodeData = {
+              shape: shapeType,
               label: `${
                 shapeType.charAt(0).toUpperCase() + shapeType.slice(1)
               }`,
-              fill: "#ffffff",
-              stroke: "#000000",
-              strokeWidth: 2,
+              fill: backgroundColor,
+              stroke: borderColor,
+              strokeWidth: borderWidth,
             };
+            nodeData = pureSvgNodeData;
+            backgroundColor = pureSvgNodeData.fill || backgroundColor;
+            borderColor = pureSvgNodeData.stroke || borderColor;
+            borderWidth = pureSvgNodeData.strokeWidth || borderWidth;
           } else {
             // Fallback to regular shape node for other types
             nodeType = "shapeNode";
             nodeData = {
               label: "Node",
               shape: type,
-            };
+            } as ShapeNodeData;
           }
 
           // Create a new node with grid-snapped position
-          const newNode: Node = {
+          const newNode = {
             id: `node-${uuidv4()}`,
             type: nodeType,
             position: snapToGrid
@@ -485,7 +489,15 @@ const EnhancedCanvas: React.FC = () => {
                 }
               : position,
             data: nodeData,
-          };
+            style: {
+              width: 150,
+              height: 75,
+              backgroundColor,
+              borderColor,
+              borderWidth,
+              borderRadius: 5,
+            },
+          } as CustomNode;
 
           // Add the new node to the flow
           addNode(newNode);
@@ -658,7 +670,7 @@ const EnhancedCanvas: React.FC = () => {
         onDragEnter={onDragEnter}
         onSelectionChange={onSelectionChange}
         onNodeDragStop={onNodeDragStop}
-        nodeTypes={nodeTypes}
+        nodeTypes={NODE_TYPES}
         fitView
         attributionPosition="bottom-left"
         panOnScroll={selectedTool === "pan"}
@@ -687,15 +699,41 @@ const EnhancedCanvas: React.FC = () => {
         onNodeContextMenu={(event, node) => handleContextMenu(event, node)}
         onPaneContextMenu={(event) => handleContextMenu(event, null)}
       >
-        {showGrid && (
-          <Background
-            gap={gridSize}
-            size={1}
-            color={darkBackground ? "#444" : "#aaa"}
-            variant={BackgroundVariant.Dots}
+        {/* Background */}
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={gridSize}
+          size={1}
+          color={darkBackground ? "#444" : "#eee"}
+          style={{ display: showGrid ? "block" : "none" }}
+        />
+
+        {/* MiniMap */}
+        {miniMapOpen && (
+          <MiniMap
+            nodeStrokeWidth={3}
+            nodeColor={(node) => {
+              return node.selected ? "#1a73e8" : "#ddd";
+            }}
+            nodeBorderRadius={2}
+            maskColor="rgba(0, 0, 0, 0.1)"
+            className="react-flow__minimap"
+            style={{
+              height: 120,
+              width: 160,
+              right: 12,
+              bottom: 12,
+              background: "white",
+              border: "1px solid #ddd",
+              borderRadius: "6px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+              opacity: 0.9,
+              transition: "all 0.2s ease",
+            }}
           />
         )}
 
+        {/* Controls */}
         <Panel position="top-left" className="canvas-tools">
           <div className="tool-group">
             <button
@@ -901,16 +939,6 @@ const EnhancedCanvas: React.FC = () => {
             </select>
           </div>
         </Panel>
-
-        {miniMapOpen && (
-          <MiniMap
-            nodeColor={(node) => {
-              return node.data?.shape?.color || "#888";
-            }}
-            maskColor="rgba(0, 0, 0, 0.05)"
-            className="mini-map"
-          />
-        )}
 
         <Controls showInteractive={false} />
       </ReactFlow>

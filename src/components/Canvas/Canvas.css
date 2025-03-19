@@ -34,6 +34,35 @@
   border-right: none;
 }
 
+.view-mode-toggle {
+  display: flex;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.view-mode-button {
+  background-color: transparent;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--text-color, #555);
+  transition: all 0.2s ease;
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.view-mode-button.active {
+  background-color: var(--primary-color, #1a73e8);
+  color: white;
+}
+
+.view-mode-button:hover:not(.active) {
+  background-color: var(--hover-color, rgba(0, 0, 0, 0.05));
+}
+
 .canvas-tool {
   background-color: transparent;
   border: 1px solid var(--border-color, #ddd);

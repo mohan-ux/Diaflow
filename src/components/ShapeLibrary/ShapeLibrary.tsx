@@ -11,31 +11,22 @@ import ShapeSearch from "./ShapeSearch";
 import Scratchpad from "./Scratchpad";
 import ShapeItem from "./ShapeItem";
 import "./ShapeLibrary.css";
-import {
-  FaSearch,
-  FaChevronDown,
-  FaSquare,
-  FaCircle,
-  FaDiamond,
-  FaRegDotCircle,
-} from "react-icons/fa";
-import { BsTriangle, BsHexagon, BsOctagon, BsStarFill } from "react-icons/bs";
 
 interface ShapeLibraryProps {
   onShapeSelect?: (shape: Shape) => void;
   onShapeDragStart?: (shape: Shape, event: React.DragEvent) => void;
 }
 
-// Shape definitions with their icon components
+// Shape definitions with string-based icons
 const BASIC_SHAPES = [
-  { id: "rectangle", icon: <FaSquare />, name: "Rectangle" },
-  { id: "circle", icon: <FaCircle />, name: "Circle" },
-  { id: "diamond", icon: <FaDiamond />, name: "Diamond" },
-  { id: "triangle", icon: <BsTriangle />, name: "Triangle" },
-  { id: "hexagon", icon: <BsHexagon />, name: "Hexagon" },
-  { id: "octagon", icon: <BsOctagon />, name: "Octagon" },
-  { id: "star", icon: <BsStarFill />, name: "Star" },
-  { id: "ellipse", icon: <FaRegDotCircle />, name: "Ellipse" },
+  { id: "rectangle", icon: "■", name: "Rectangle" },
+  { id: "circle", icon: "●", name: "Circle" },
+  { id: "diamond", icon: "◆", name: "Diamond" },
+  { id: "triangle", icon: "▲", name: "Triangle" },
+  { id: "hexagon", icon: "⬡", name: "Hexagon" },
+  { id: "octagon", icon: "⯃", name: "Octagon" },
+  { id: "star", icon: "★", name: "Star" },
+  { id: "ellipse", icon: "⬭", name: "Ellipse" },
 ];
 
 /**
@@ -49,7 +40,6 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
     libraries,
     visibleLibraries,
     searchResults,
-    searchOptions,
     scratchpad,
     addLibrary,
     searchShapes,
@@ -61,7 +51,6 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
 
   const [isSearching, setIsSearching] = useState(false);
   const [isDropTarget, setIsDropTarget] = useState(false);
-  const [showMoreShapesDialog, setShowMoreShapesDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedCategories, setExpandedCategories] = useState<{
     [key: string]: boolean;
@@ -136,7 +125,6 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
 
   // Handle More Shapes button click
   const handleMoreShapesClick = () => {
-    setShowMoreShapesDialog(true);
     // In a real implementation, this would open a dialog to select more shape libraries
     console.log("More Shapes button clicked");
   };
@@ -172,7 +160,7 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
   return (
     <div className="shape-library">
       <div className="search-container">
-        <FaSearch className="search-icon" />
+        <span className="search-icon">🔍</span>
         <input
           type="text"
           placeholder="Search shapes"
@@ -189,11 +177,11 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
             onClick={() => toggleCategory("Basic Shapes")}
           >
             <h3>Basic Shapes</h3>
-            <FaChevronDown
-              className={`category-arrow ${
-                expandedCategories["Basic Shapes"] ? "expanded" : ""
-              }`}
-            />
+            <span className={`category-arrow ${
+              expandedCategories["Basic Shapes"] ? "expanded" : ""
+            }`}>
+              ▼
+            </span>
           </div>
 
           {expandedCategories["Basic Shapes"] && (

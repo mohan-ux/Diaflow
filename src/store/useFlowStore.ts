@@ -74,6 +74,9 @@ const useFlowStore = create<FlowState>((set, get) => ({
 
   // Set selected elements
   setSelectedElements: (elements) => set({ selectedElements: elements }),
+
+  // Clear the canvas (for new workspace)
+  clearCanvas: () => set({ nodes: [], edges: [], selectedElements: { nodes: [], edges: [] } }),
 }));
 
 // Utility for handling node changes

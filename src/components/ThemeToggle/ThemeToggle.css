@@ -1,0 +1,23 @@
+.theme-toggle-button {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #ddd;
+}
+
+.theme-toggle-button.light {
+  color: #333;
+  border-color: #ccc;
+}
+
+.theme-icon {
+  margin-right: 8px;
+}
+
+.theme-label {
+  font-size: 14px;
+}

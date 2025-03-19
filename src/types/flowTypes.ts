@@ -63,4 +63,5 @@ export interface FlowState {
     nodes: CustomNode[];
     edges: CustomEdge[];
   }) => void;
+  clearCanvas: () => void;
 }
