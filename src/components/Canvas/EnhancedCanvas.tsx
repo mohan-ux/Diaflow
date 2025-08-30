@@ -453,72 +453,120 @@ const EnhancedCanvas: React.FC = () => {
             console.error("Error parsing shape data:", error);
           }
 
-          // Create shape data based on dropped type
-          let nodeData: ShapeNodeData | PureSVGNodeData;
-          let nodeType: string;
-          let backgroundColor = shapeData.backgroundColor || "#ffffff";
-          let borderColor = shapeData.borderColor || "#000000";
-          let borderWidth = shapeData.borderWidth || 2;
-          let nodeWidth = shapeData.width || 140;
-          let nodeHeight = shapeData.height || 80;
+                     // Create shape data based on dropped type
+           let nodeData: ShapeNodeData | PureSVGNodeData;
+           let nodeType: string;
+           
+           // Define better colors for different shape types
+           let backgroundColor = "#ffffff";
+           let borderColor = "#3b82f6";
+           let textColor = "#1f2937";
+           let borderWidth = 2;
+           let nodeWidth = shapeData.width || 140;
+           let nodeHeight = shapeData.height || 80;
 
-          // Use PureSVGNode for shapes to get clean rendering
-          if (type.includes("shape:")) {
-            const shapeType = type.split(":")[1]; // Extract shape type
-            nodeType = "pureSvg";
-            
-            // Create SVG content based on shape type
-            let svgContent = '';
-            if (shapeData.svgPath) {
-              svgContent = `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="${shapeData.svgPath}" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" />
-                <text x="100" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#333">${shapeData.defaultLabel || shapeData.name}</text>
-              </svg>`;
-            } else {
-              // Fallback SVG
-              svgContent = `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-                <rect x="10" y="10" width="180" height="80" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" rx="5" />
-                <text x="100" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#333">${shapeData.defaultLabel || shapeData.name}</text>
-              </svg>`;
-            }
+           // Set colors based on shape category
+           if (shapeData.category) {
+             switch (shapeData.category) {
+               case 'terminal':
+                 backgroundColor = "#fef3c7";
+                 borderColor = "#f59e0b";
+                 textColor = "#92400e";
+                 break;
+               case 'process':
+                 backgroundColor = "#dbeafe";
+                 borderColor = "#3b82f6";
+                 textColor = "#1e40af";
+                 break;
+               case 'decision':
+                 backgroundColor = "#fce7f3";
+                 borderColor = "#ec4899";
+                 textColor = "#be185d";
+                 break;
+               case 'data':
+                 backgroundColor = "#dcfce7";
+                 borderColor = "#22c55e";
+                 textColor = "#15803d";
+                 break;
+               case 'cloud':
+                 backgroundColor = "#f3e8ff";
+                 borderColor = "#8b5cf6";
+                 textColor = "#6d28d9";
+                 break;
+               default:
+                 backgroundColor = "#ffffff";
+                 borderColor = "#3b82f6";
+                 textColor = "#1f2937";
+             }
+           }
 
-            const pureSvgNodeData: PureSVGNodeData = {
-              svgContent,
-              label: shapeData.defaultLabel || shapeData.name || `${shapeType.charAt(0).toUpperCase() + shapeType.slice(1)}`,
-              fill: backgroundColor,
-              stroke: borderColor,
-              strokeWidth: borderWidth,
-            };
-            nodeData = pureSvgNodeData;
-          } else {
-            // Fallback to regular shape node for other types
-            nodeType = "shapeNode";
-            nodeData = {
-              label: shapeData.defaultLabel || shapeData.name || "Node",
-              shape: type,
-            } as ShapeNodeData;
-          }
+           // Use PureSVGNode for shapes to get clean rendering
+           if (type.includes("shape:")) {
+             const shapeType = type.split(":")[1]; // Extract shape type
+             nodeType = "pureSvg";
+             
+             // Create SVG content based on shape type
+             let svgContent = '';
+             if (shapeData.svgPath) {
+               svgContent = `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                 <defs>
+                   <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                     <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.1)"/>
+                   </filter>
+                 </defs>
+                 <path d="${shapeData.svgPath}" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" filter="url(#shadow)" />
+                 <text x="100" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="500" fill="${textColor}">${shapeData.defaultLabel || shapeData.name}</text>
+               </svg>`;
+             } else {
+               // Fallback SVG
+               svgContent = `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                 <defs>
+                   <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                     <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.1)"/>
+                   </filter>
+                 </defs>
+                 <rect x="10" y="10" width="180" height="80" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" rx="5" filter="url(#shadow)" />
+                 <text x="100" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="500" fill="${textColor}">${shapeData.defaultLabel || shapeData.name}</text>
+               </svg>`;
+             }
 
-          // Create a new node with grid-snapped position
-          const newNode = {
-            id: `node-${uuidv4()}`,
-            type: nodeType,
-            position: snapToGrid
-              ? {
-                  x: Math.round(position.x / gridSize) * gridSize,
-                  y: Math.round(position.y / gridSize) * gridSize,
-                }
-              : position,
-            data: nodeData,
-            style: {
-              width: nodeWidth,
-              height: nodeHeight,
-              backgroundColor,
-              borderColor,
-              borderWidth,
-              borderRadius: 5,
-            },
-          } as CustomNode;
+             const pureSvgNodeData: PureSVGNodeData = {
+               svgContent,
+               label: shapeData.defaultLabel || shapeData.name || `${shapeType.charAt(0).toUpperCase() + shapeType.slice(1)}`,
+               fill: backgroundColor,
+               stroke: borderColor,
+               strokeWidth: borderWidth,
+             };
+             nodeData = pureSvgNodeData;
+           } else {
+             // Fallback to regular shape node for other types
+             nodeType = "shapeNode";
+             nodeData = {
+               label: shapeData.defaultLabel || shapeData.name || "Node",
+               shape: type,
+             } as ShapeNodeData;
+           }
+
+           // Create a new node with grid-snapped position
+           const newNode = {
+             id: `node-${uuidv4()}`,
+             type: nodeType,
+             position: snapToGrid
+               ? {
+                   x: Math.round(position.x / gridSize) * gridSize,
+                   y: Math.round(position.y / gridSize) * gridSize,
+                 }
+               : position,
+             data: nodeData,
+             style: {
+               width: nodeWidth,
+               height: nodeHeight,
+               backgroundColor: "transparent", // Make container transparent
+               borderColor: "transparent", // Make border transparent
+               borderWidth: 0,
+               borderRadius: 0,
+             },
+           } as CustomNode;
 
           // Add the new node to the flow
           addNode(newNode);
@@ -557,11 +605,15 @@ const EnhancedCanvas: React.FC = () => {
       types: Array.from(event.dataTransfer.types),
     });
 
-    // Add visual indication of drop target to the container element
-    if (reactFlowWrapper.current) {
-      reactFlowWrapper.current.classList.add("drag-over");
+    // Only show drop overlay if canvas is empty or we're dragging a shape
+    const type = event.dataTransfer.getData("application/reactflow");
+    if (type && type.includes("shape:")) {
+      // Only show drop overlay if canvas is empty (no nodes)
+      if (nodes.length === 0 && reactFlowWrapper.current) {
+        reactFlowWrapper.current.classList.add("drag-over");
+      }
     }
-  }, []);
+  }, [nodes.length]);
 
   // Handle drag leave
   const onDragLeave = useCallback((event: React.DragEvent) => {
