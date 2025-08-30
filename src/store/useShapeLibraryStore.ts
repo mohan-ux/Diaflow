@@ -2,7 +2,6 @@ import { create } from "zustand";
 import {
   Shape,
   ShapeLibrary,
-  ShapeCategory,
   ShapeSearchOptions,
   Scratchpad,
 } from "../types/shapes";

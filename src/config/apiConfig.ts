@@ -24,3 +24,27 @@ export const firebaseConfig = {
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "",
   appId: process.env.REACT_APP_FIREBASE_APP_ID || "",
 };
+
+// API Configuration for Gemini
+export const API_CONFIG = {
+  GEMINI_API_KEY: process.env.REACT_APP_GEMINI_API_KEY || "",
+  GEMINI_MODEL: process.env.REACT_APP_GEMINI_MODEL || "gemini-2.0-flash",
+  GEMINI_TEMPERATURE: parseFloat(process.env.REACT_APP_GEMINI_TEMPERATURE || "0.3"),
+  GEMINI_MAX_TOKENS: parseInt(process.env.REACT_APP_GEMINI_MAX_TOKENS || "4096", 10),
+  API_URL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+};
+
+// Check if API key is configured
+export const isApiConfigured = () => {
+  return !!API_CONFIG.GEMINI_API_KEY && API_CONFIG.GEMINI_API_KEY !== "your_gemini_api_key_here";
+};
+
+// Get API configuration with validation
+export const getApiConfig = () => {
+  if (!isApiConfigured()) {
+    throw new Error(
+      "Gemini API key is not configured. Please set REACT_APP_GEMINI_API_KEY in your environment variables."
+    );
+  }
+  return API_CONFIG;
+};

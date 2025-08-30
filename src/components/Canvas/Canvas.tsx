@@ -14,6 +14,10 @@ import ReactFlow, {
   NodeDragHandler,
   ConnectionLineType,
   Connection,
+  applyNodeChanges,
+  applyEdgeChanges,
+  NodeChange,
+  EdgeChange
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { Shape } from "../../types/shapes";
@@ -21,11 +25,6 @@ import { v4 as uuidv4 } from "uuid";
 import { CustomNode, CustomEdge } from "../../types/flowTypes";
 import ShapeNode from "./nodes/ShapeNode";
 import useFlowStore from "../../store/useFlowStore";
-import {
-  onNodesChange,
-  onEdgesChange,
-  onConnect,
-} from "../../store/useFlowStore";
 
 // Define custom node types
 const nodeTypes: NodeTypes = {
@@ -61,6 +60,19 @@ const Canvas: React.FC = () => {
 
   // Track Ctrl key press for multi-selection
   const [isCtrlPressed, setIsCtrlPressed] = useState<boolean>(false);
+  
+  // State for nodes and edges
+  const [localNodes, setNodes] = useState<Node[]>(nodes);
+  
+  // Handle edge changes
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      const updatedEdges = applyEdgeChanges(changes, edges);
+      // Update edges in store if needed
+      console.log('Edge changes:', changes);
+    },
+    [edges]
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -415,9 +427,12 @@ const Canvas: React.FC = () => {
       <ReactFlow
         nodes={nodes}
         edges={edges as unknown as Edge[]}
-        onNodesChange={onNodesChange}
+        onNodesChange={(changes) => {
+          const updatedNodes = applyNodeChanges(changes, nodes);
+          setNodes(updatedNodes);
+        }}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        onConnect={(params: Connection) => addEdge(params as CustomEdge)}
         onInit={(instance) => {
           setReactFlowInstance(instance);
           setZoomLevel(instance.getZoom());

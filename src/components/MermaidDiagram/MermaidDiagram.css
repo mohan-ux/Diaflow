@@ -1,0 +1,48 @@
+.mermaid-diagram-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: var(--canvas-background, #fff);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.mermaid-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mermaid-content svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-error {
+  color: #e53935;
+  padding: 16px;
+  border: 1px solid #e53935;
+  border-radius: 4px;
+  background-color: rgba(229, 57, 53, 0.1);
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .mermaid-diagram-container {
+  background-color: var(--canvas-background, #1e1e1e);
+}
+
+[data-theme="dark"] .mermaid-content svg {
+  filter: invert(0.85);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mermaid-diagram-container {
+    padding: 8px;
+  }
+}

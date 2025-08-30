@@ -53,15 +53,19 @@ export interface FlowState {
   // Actions
   setNodes: (nodes: CustomNode[]) => void;
   setEdges: (edges: CustomEdge[]) => void;
-  addNode: (node: CustomNode) => void;
+  addNode: (node: CustomNode) => string;
   updateNode: (id: string, updates: Partial<CustomNode>) => void;
   removeNode: (id: string) => void;
-  addEdge: (edge: CustomEdge) => void;
+  addEdge: (edge: CustomEdge) => string;
   updateEdge: (id: string, updates: Partial<CustomEdge>) => void;
   removeEdge: (id: string) => void;
   setSelectedElements: (elements: {
     nodes: CustomNode[];
     edges: CustomEdge[];
   }) => void;
+  clearSelectedElements: () => void;
   clearCanvas: () => void;
+  onNodesChange: (changes: any[]) => void;
+  onEdgesChange: (changes: any[]) => void;
+  onConnect: (connection: any) => void;
 }

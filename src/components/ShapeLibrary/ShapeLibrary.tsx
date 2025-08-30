@@ -38,7 +38,7 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
 }) => {
   const {
     libraries,
-    visibleLibraries,
+    getVisibleLibraries,
     searchResults,
     scratchpad,
     addLibrary,
@@ -131,7 +131,7 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
 
   // Get all available categories
   const availableCategories = Array.from(
-    new Set(visibleLibraries.map((lib) => lib.category))
+    new Set(getVisibleLibraries().map((lib) => lib.category))
   ) as ShapeCategoryType[];
 
   // Toggle category expansion
@@ -244,7 +244,7 @@ const ShapeLibrary: React.FC<ShapeLibraryProps> = ({
         {/* Shape Categories */}
         {!isSearching && (
           <div className="shape-categories">
-            {visibleLibraries.map((library) => (
+            {getVisibleLibraries().map((library) => (
               <ShapeCategory
                 key={library.id}
                 title={library.name}

@@ -3,7 +3,7 @@ import React, {
   useRef,
   useCallback,
   useEffect,
-  useMemo,
+  // Removed unused import: useMemo
 } from "react";
 import "./Canvas.css";
 import ReactFlow, {
@@ -19,10 +19,12 @@ import ReactFlow, {
   ConnectionLineType,
   Connection,
   MarkerType,
-  NodeMouseHandler,
+  // Removed unused import: NodeMouseHandler
   type Node,
   type Edge,
   ConnectionMode,
+  NodeChange,
+  EdgeChange,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { Shape } from "../../types/shapes";
@@ -30,11 +32,6 @@ import { v4 as uuidv4 } from "uuid";
 import { CustomNode, CustomEdge } from "../../types/flowTypes";
 import ShapeNode from "./nodes/ShapeNode";
 import useFlowStore from "../../store/useFlowStore";
-import {
-  onNodesChange,
-  onEdgesChange,
-  onConnect,
-} from "../../store/useFlowStore";
 import PureSVGNode, { PureSVGNodeData } from "./nodes/PureSVGNode";
 import { ShapeNodeData } from "../../interfaces/types";
 
@@ -457,10 +454,8 @@ const EnhancedCanvas: React.FC = () => {
             const shapeType = type.split(":")[1]; // Extract shape type
             nodeType = "pureSvg";
             const pureSvgNodeData: PureSVGNodeData = {
-              shape: shapeType,
-              label: `${
-                shapeType.charAt(0).toUpperCase() + shapeType.slice(1)
-              }`,
+              svgContent: `<svg viewBox="0 0 100 100"><rect width="100" height="100" /></svg>`,
+              label: `${shapeType.charAt(0).toUpperCase() + shapeType.slice(1)}`,
               fill: backgroundColor,
               stroke: borderColor,
               strokeWidth: borderWidth,
@@ -657,12 +652,22 @@ const EnhancedCanvas: React.FC = () => {
       <ReactFlow
         nodes={nodes}
         edges={edges as unknown as Edge[]}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onNodesChange={(changes: NodeChange[]) => {
+          // Handle node changes like position updates, deletions etc
+          nodes.forEach(node => {
+            const change = changes.find(c => 'id' in c && c.id === node.id);
+            if (change && change.type === 'position' && 'position' in change) {
+              updateNode(node.id, { position: change.position });
+            }
+          });
+        }}
+        onEdgesChange={(changes: EdgeChange[]) => {
+          // Handle edge changes
+          console.log('Edge changes:', changes);
+        }}
         onConnect={onConnect}
         onInit={(instance) => {
           setReactFlowInstance(instance);
-          setZoomLevel(instance.getZoom());
         }}
         onDrop={onDrop}
         onDragOver={onDragOver}

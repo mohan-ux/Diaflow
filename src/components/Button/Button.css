@@ -1,0 +1,144 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.button:focus {
+  box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.25);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Variants */
+.button-primary {
+  background-color: #2684ff;
+  color: white;
+  border-color: #2684ff;
+}
+
+.button-primary:hover:not(:disabled) {
+  background-color: #1a73e8;
+  border-color: #1a73e8;
+}
+
+.button-secondary {
+  background-color: #f5f5f5;
+  color: #333;
+  border-color: #e0e0e0;
+}
+
+.button-secondary:hover:not(:disabled) {
+  background-color: #e8e8e8;
+  border-color: #d0d0d0;
+}
+
+.button-danger {
+  background-color: #f44336;
+  color: white;
+  border-color: #f44336;
+}
+
+.button-danger:hover:not(:disabled) {
+  background-color: #e53935;
+  border-color: #e53935;
+}
+
+.button-success {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.button-success:hover:not(:disabled) {
+  background-color: #43a047;
+  border-color: #43a047;
+}
+
+/* Sizes */
+.button-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.button-medium {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.button-large {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.button-full-width {
+  width: 100%;
+}
+
+/* Loading state */
+.button-loader {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.loader-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+  margin: 0 2px;
+  animation: loader-dot 1s infinite ease-in-out;
+  opacity: 0.6;
+}
+
+.loader-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loader-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loader-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loader-dot {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.button-text-loading {
+  opacity: 0.8;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .button-secondary {
+  background-color: #333;
+  color: #f5f5f5;
+  border-color: #444;
+}
+
+[data-theme="dark"] .button-secondary:hover:not(:disabled) {
+  background-color: #444;
+  border-color: #555;
+}

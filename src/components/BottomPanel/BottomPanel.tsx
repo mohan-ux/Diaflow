@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import useFlowStore from "../../store/useFlowStore";
-import { CustomNode, CustomEdge } from "../../types/flowTypes";
 import "./BottomPanel.css";
 
 const BottomPanel: React.FC = () => {
@@ -8,7 +7,7 @@ const BottomPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState("style");
 
   // Get store data
-  const { nodes, edges, selectedElements, updateNode, updateEdge } =
+  const { selectedElements, updateNode, updateEdge } =
     useFlowStore();
 
   const hasSelection =
@@ -19,7 +18,7 @@ const BottomPanel: React.FC = () => {
   // Get the first selected element (node or edge)
   const selectedNode = selectedElements.nodes[0];
   const selectedEdge = selectedElements.edges[0];
-  const selectedElement = selectedNode || selectedEdge;
+  // Removed unused variable selectedElement
 
   // Local state for property values
   const [properties, setProperties] = useState<any>({});

@@ -23,14 +23,25 @@ function App() {
   return (
     <div className={`app ${theme === "dark" ? "dark-theme" : ""}`}>
       <header className="app-header">
-        <div className="logo">Mind Map AI</div>
+        <div className="logo-container">
+          <span className="logo-icon">⟿</span>
+          <span className="logo">DIAFLOW</span>
+        </div>
         <div className="header-controls">
           <button className="new-diagram-button" onClick={openNewDiagramModal}>
-            New Diagram
+            <span>New Diagram</span>
           </button>
-          <button className="theme-toggle" onClick={toggleTheme}>
-            {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
-          </button>
+          <label className="theme-toggle-switch">
+            <input
+              type="checkbox"
+              checked={theme === "dark"}
+              onChange={toggleTheme}
+            />
+            <span className="theme-toggle-slider">
+              <span className="theme-toggle-icon theme-toggle-sun">☀️</span>
+              <span className="theme-toggle-icon theme-toggle-moon">🌙</span>
+            </span>
+          </label>
         </div>
       </header>
       <div className="app-container">
@@ -41,9 +52,7 @@ function App() {
         </div>
         <RightPanel />
       </div>
-
       <CustomDragLayer />
-
       <NewDiagramModal
         isOpen={isNewDiagramModalOpen}
         onClose={closeNewDiagramModal}

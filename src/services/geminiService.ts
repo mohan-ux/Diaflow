@@ -1,9 +1,6 @@
 import { Node, Edge } from "reactflow";
 import { CustomNode, CustomEdge } from "../types/flowTypes";
-
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY || "";
-const API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+import { getApiConfig, isApiConfigured } from "../config/apiConfig";
 
 interface GeminiResponse {
   candidates: Array<{
@@ -18,6 +15,32 @@ interface GeminiResponse {
 interface DiagramData {
   nodes: Node[];
   edges: Edge[];
+  mermaidCode?: string;
+  generatedCode?: {
+    python?: string;
+    javascript?: string;
+    json?: string;
+    yaml?: string;
+  };
+  analysis?: WorkflowAnalysis;
+}
+
+interface WorkflowAnalysis {
+  workflowType: string;
+  processes: Array<{
+    id: string;
+    name: string;
+    type: 'process' | 'decision' | 'terminal' | 'data' | 'subprocess';
+    description: string;
+    parameters?: Record<string, any>;
+  }>;
+  connections: Array<{
+    from: string;
+    to: string;
+    condition?: string;
+    type: 'sequential' | 'conditional' | 'parallel';
+  }>;
+  recommendations: string[];
 }
 
 // Helper function to convert ReactFlow nodes to CustomNode format
@@ -81,41 +104,110 @@ const convertToDiaFlowEdges = (edges: Edge[]): CustomEdge[] => {
   }) as CustomEdge[];
 };
 
+// Enhanced prompt engineering for workflow generation
+const createWorkflowPrompt = (prompt: string, context?: string) => {
+  return `
+You are an expert workflow diagram designer and software architect. Analyze the following workflow description and create a comprehensive diagram with executable code.
+
+WORKFLOW DESCRIPTION: "${prompt}"
+${context ? `CONTEXT: ${context}` : ''}
+
+TASK: Generate a complete workflow implementation including:
+
+1. VISUAL DIAGRAM: Create a ReactFlow-compatible JSON with nodes and edges
+2. MERMAID CODE: Generate Mermaid flowchart syntax
+3. EXECUTABLE CODE: Generate implementation code in multiple languages
+4. ANALYSIS: Provide workflow analysis and recommendations
+
+REQUIREMENTS:
+
+NODES:
+- Use appropriate shapes for different node types:
+  * Process steps: rectangles with rounded corners
+  * Decision points: diamonds
+  * Start/End points: stadium shapes
+  * Data inputs/outputs: parallelograms
+  * Databases: cylinders
+  * Subprocesses: rectangles with double borders
+
+- Each node should have:
+  * Unique ID (alphanumeric)
+  * Descriptive label
+  * Appropriate type classification
+  * Position coordinates (x, y)
+  * Styling properties
+
+EDGES:
+- Use different line styles:
+  * Solid lines for sequential flow
+  * Dotted lines for optional/conditional flow
+  * Thick lines for critical paths
+  * Arrows with labels for conditional branches
+
+- Each edge should have:
+  * Source and target node IDs
+  * Optional label for conditions
+  * Appropriate styling
+
+CODE GENERATION:
+- Python: Generate executable Python script with proper error handling
+- JavaScript: Generate Node.js implementation
+- JSON: Configuration file for the workflow
+- YAML: Alternative configuration format
+
+ANALYSIS:
+- Identify workflow type (ETL, approval, automation, etc.)
+- List all processes and their relationships
+- Provide optimization recommendations
+- Suggest error handling and monitoring points
+
+RESPONSE FORMAT:
+Return a JSON object with the following structure:
+{
+  "nodes": [array of ReactFlow nodes],
+  "edges": [array of ReactFlow edges],
+  "mermaidCode": "flowchart TD\n...",
+  "generatedCode": {
+    "python": "def main():\n...",
+    "javascript": "async function main() {\n...",
+    "json": "{...}",
+    "yaml": "..."
+  },
+  "analysis": {
+    "workflowType": "string",
+    "processes": [...],
+    "connections": [...],
+    "recommendations": [...]
+  }
+}
+
+IMPORTANT: Return ONLY valid JSON with no additional text, explanations, or markdown formatting.
+`;
+};
+
 // Function to generate a diagram from a user prompt
 export async function generateDiagramFromPrompt(
-  prompt: string
-): Promise<{ nodes: CustomNode[]; edges: CustomEdge[] } | null> {
+  prompt: string,
+  context?: string
+): Promise<{ 
+  nodes: CustomNode[]; 
+  edges: CustomEdge[]; 
+  mermaidCode?: string;
+  generatedCode?: Record<string, string>;
+  analysis?: WorkflowAnalysis;
+} | null> {
   try {
-    if (!API_KEY) {
-      console.error("Gemini API key is not set.");
+    // Check if API is configured
+    if (!isApiConfigured()) {
       throw new Error(
-        "API key is missing. Please set REACT_APP_GEMINI_API_KEY in your environment variables."
+        "Gemini API key is not configured. Please set REACT_APP_GEMINI_API_KEY in your environment variables."
       );
     }
 
-    const fullPrompt = `
-Generate a diagram based on the following prompt: "${prompt}"
+    const config = getApiConfig();
+    const fullPrompt = createWorkflowPrompt(prompt, context);
 
-Return a JSON object with two properties:
-1. "nodes": An array of node objects for React Flow, each with:
-   - id: A unique string identifier
-   - position: {x: number, y: number} for positioning
-   - data: {label: string} for the node content
-   - type: A string indicating node type (default, input, output, or custom)
-   - style: (optional) Any custom styling
-
-2. "edges": An array of edge objects for React Flow, each with:
-   - id: A unique string identifier
-   - source: The source node id
-   - target: The target node id
-   - animated: (optional) Boolean to animate the edge
-   - label: (optional) Text label for the edge
-   - style: (optional) Any custom styling
-
-IMPORTANT: Format the response as JSON only, with no additional text, explanations or markdown formatting.
-`;
-
-    const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+    const response = await fetch(`${config.API_URL}?key=${config.GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -131,16 +223,17 @@ IMPORTANT: Format the response as JSON only, with no additional text, explanatio
           },
         ],
         generationConfig: {
-          temperature: 0.2,
+          temperature: config.GEMINI_TEMPERATURE,
           topK: 32,
           topP: 0.95,
-          maxOutputTokens: 8192,
+          maxOutputTokens: config.GEMINI_MAX_TOKENS,
         },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("API Error Response:", errorText);
       throw new Error(`API request failed: ${response.status} ${errorText}`);
     }
 
@@ -181,9 +274,140 @@ IMPORTANT: Format the response as JSON only, with no additional text, explanatio
     const customNodes = convertToDiaFlowNodes(diagramData.nodes);
     const customEdges = convertToDiaFlowEdges(diagramData.edges);
 
-    return { nodes: customNodes, edges: customEdges };
+    return { 
+      nodes: customNodes, 
+      edges: customEdges,
+      mermaidCode: diagramData.mermaidCode,
+      generatedCode: diagramData.generatedCode,
+      analysis: diagramData.analysis as WorkflowAnalysis
+    };
   } catch (error) {
     console.error("Error generating diagram:", error);
+    throw error;
+  }
+}
+
+// Function to generate code for existing workflow
+export async function generateCodeForWorkflow(
+  nodes: CustomNode[],
+  edges: CustomEdge[],
+  language: 'python' | 'javascript' | 'json' | 'yaml' = 'python'
+): Promise<string> {
+  try {
+    if (!isApiConfigured()) {
+      throw new Error("API key is missing");
+    }
+
+    const config = getApiConfig();
+    const workflowDescription = `Generate ${language} code for the following workflow:
+    
+Nodes: ${JSON.stringify(nodes.map(n => ({ id: n.id, label: n.data?.label, type: n.type })))}
+Edges: ${JSON.stringify(edges.map(e => ({ from: e.source, to: e.target, label: e.label })))}
+
+Generate executable ${language} code that implements this workflow with proper error handling, logging, and best practices.`;
+
+    const response = await fetch(`${config.API_URL}?key=${config.GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: workflowDescription,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          topK: 32,
+          topP: 0.95,
+          maxOutputTokens: 4096,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const data: GeminiResponse = await response.json();
+    return data.candidates[0].content.parts[0].text.trim();
+  } catch (error) {
+    console.error("Error generating code:", error);
+    throw error;
+  }
+}
+
+// Function to analyze and optimize workflow
+export async function analyzeWorkflow(
+  nodes: CustomNode[],
+  edges: CustomEdge[]
+): Promise<WorkflowAnalysis> {
+  try {
+    if (!isApiConfigured()) {
+      throw new Error("API key is missing");
+    }
+
+    const config = getApiConfig();
+    const analysisPrompt = `Analyze the following workflow and provide optimization recommendations:
+
+Nodes: ${JSON.stringify(nodes.map(n => ({ id: n.id, label: n.data?.label, type: n.type })))}
+Edges: ${JSON.stringify(edges.map(e => ({ from: e.source, to: e.target, label: e.label })))}
+
+Provide analysis including:
+1. Workflow type classification
+2. Process identification and relationships
+3. Optimization opportunities
+4. Error handling recommendations
+5. Performance improvements
+
+Return as JSON with structure:
+{
+  "workflowType": "string",
+  "processes": [...],
+  "connections": [...],
+  "recommendations": [...]
+}`;
+
+    const response = await fetch(`${config.API_URL}?key=${config.GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: analysisPrompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.3,
+          topK: 32,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const data: GeminiResponse = await response.json();
+    const jsonMatch = data.candidates[0].content.parts[0].text.match(/{[\s\S]*}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : data.candidates[0].content.parts[0].text;
+    
+    return JSON.parse(jsonString) as WorkflowAnalysis;
+  } catch (error) {
+    console.error("Error analyzing workflow:", error);
     throw error;
   }
 }

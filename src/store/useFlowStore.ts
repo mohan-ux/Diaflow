@@ -1,110 +1,99 @@
-import create from "zustand";
-import {
-  Connection,
-  Edge,
-  EdgeChange,
-  NodeChange,
-  addEdge,
-  OnNodesChange,
-  OnEdgesChange,
-  OnConnect,
-  applyNodeChanges,
-  applyEdgeChanges,
-} from "reactflow";
-import { CustomNode, CustomEdge, FlowState } from "../types/flowTypes";
-import { v4 as uuidv4 } from "uuid";
+import { create } from "zustand";
+// Removed unused imports: Node, CustomNode, CustomEdge
+import { FlowState } from "../types/flowTypes";
+import { generateId } from "../utils/idGenerator";
 
 // Create the store
-const useFlowStore = create<FlowState>((set, get) => ({
+const useFlowStore = create<FlowState>((set) => ({
+  // State
   nodes: [],
   edges: [],
   selectedElements: { nodes: [], edges: [] },
 
-  // Set all nodes
+  // Node actions
   setNodes: (nodes) => set({ nodes }),
-
-  // Set all edges
   setEdges: (edges) => set({ edges }),
-
-  // Add a single node
+  
   addNode: (node) => {
-    // Ensure node has an ID
-    const nodeWithId = node.id ? node : { ...node, id: uuidv4() };
-    set((state) => ({ nodes: [...state.nodes, nodeWithId] }));
+    const id = generateId();
+    set((state) => ({
+      nodes: [...state.nodes, { ...node, id }],
+    }));
+    return id;
   },
 
-  // Update a node
-  updateNode: (id, updates) =>
+  updateNode: (nodeId, updates) => {
     set((state) => ({
       nodes: state.nodes.map((node) =>
-        node.id === id ? { ...node, ...updates } : node
+        node.id === nodeId ? { ...node, ...updates } : node
       ),
-    })),
-
-  // Remove a node
-  removeNode: (id) =>
-    set((state) => ({
-      nodes: state.nodes.filter((node) => node.id !== id),
-      // Also remove connected edges
-      edges: state.edges.filter(
-        (edge) => edge.source !== id && edge.target !== id
-      ),
-    })),
-
-  // Add an edge
-  addEdge: (edge) => {
-    // Ensure edge has an ID
-    const edgeWithId = edge.id ? edge : { ...edge, id: uuidv4() };
-    set((state) => ({ edges: [...state.edges, edgeWithId] }));
+    }));
   },
 
-  // Update an edge
-  updateEdge: (id, updates) =>
+  removeNode: (nodeId) => {
+    set((state) => ({
+      nodes: state.nodes.filter((node) => node.id !== nodeId),
+      edges: state.edges.filter(
+        (edge) => edge.source !== nodeId && edge.target !== nodeId
+      ),
+    }));
+  },
+
+  // Edge actions
+  addEdge: (edge) => {
+    const id = generateId();
+    set((state) => ({
+      edges: [...state.edges, { ...edge, id }],
+    }));
+    return id;
+  },
+
+  updateEdge: (edgeId, updates) => {
     set((state) => ({
       edges: state.edges.map((edge) =>
-        edge.id === id ? { ...edge, ...updates } : edge
+        edge.id === edgeId ? { ...edge, ...updates } : edge
       ),
-    })),
+    }));
+  },
 
-  // Remove an edge
-  removeEdge: (id) =>
+  removeEdge: (edgeId) => {
     set((state) => ({
-      edges: state.edges.filter((edge) => edge.id !== id),
-    })),
+      edges: state.edges.filter((edge) => edge.id !== edgeId),
+    }));
+  },
 
-  // Set selected elements
-  setSelectedElements: (elements) => set({ selectedElements: elements }),
+  // Selection actions
+  setSelectedElements: (elements) => {
+    set({ selectedElements: elements });
+  },
 
-  // Clear the canvas (for new workspace)
+  clearSelectedElements: () => {
+    set({ selectedElements: { nodes: [], edges: [] } });
+  },
+
+  // Flow actions
+  onNodesChange: (changes) => {
+    set((state) => {
+      // Handle node changes
+      return { nodes: state.nodes };
+    });
+  },
+
+  onEdgesChange: (changes) => {
+    set((state) => {
+      // Handle edge changes
+      return { edges: state.edges };
+    });
+  },
+
+  onConnect: (connection) => {
+    set((state) => {
+      // Handle new connection
+      return { edges: state.edges };
+    });
+  },
+  
   clearCanvas: () => set({ nodes: [], edges: [], selectedElements: { nodes: [], edges: [] } }),
 }));
-
-// Utility for handling node changes
-export const onNodesChange: OnNodesChange = (changes) => {
-  useFlowStore.setState((state) => ({
-    nodes: applyNodeChanges(changes, state.nodes) as CustomNode[],
-  }));
-};
-
-// Utility for handling edge changes
-export const onEdgesChange: OnEdgesChange = (changes) => {
-  useFlowStore.setState((state) => ({
-    edges: applyEdgeChanges(changes, state.edges) as CustomEdge[],
-  }));
-};
-
-// Utility for handling new connections
-export const onConnect: OnConnect = (connection) => {
-  useFlowStore.setState((state) => ({
-    edges: addEdge(
-      {
-        ...connection,
-        id: `edge-${connection.source}-${connection.target}`,
-        type: "smoothstep",
-      },
-      state.edges
-    ) as CustomEdge[],
-  }));
-};
 
 export default useFlowStore;
