@@ -23,14 +23,32 @@ import {
 // Tab type
 type TabType = "shapes" | "templates" | "favorites" | "connections";
 
-// Shape library configuration
+// Enhanced shape library configuration with proper SVG definitions
 const shapeLibrary = {
   terminal: {
     title: "Terminal",
     icon: <RiPlayFill />,
     shapes: [
-      { id: 'stadium', name: 'Stadium', icon: <RiCircleFill />, usage: 'Start/End processes', defaultLabel: 'Start/End' },
-      { id: 'circle', name: 'Circle', icon: <RiCircleFill />, usage: 'Terminal points', defaultLabel: 'Terminal' }
+      { 
+        id: 'stadium', 
+        name: 'Stadium', 
+        icon: <RiCircleFill />, 
+        usage: 'Start/End processes', 
+        defaultLabel: 'Start/End',
+        svgPath: 'M20,50 Q20,20 50,20 L150,20 Q180,20 180,50 L180,150 Q180,180 150,180 L50,180 Q20,180 20,150 Z',
+        width: 120,
+        height: 80
+      },
+      { 
+        id: 'circle', 
+        name: 'Circle', 
+        icon: <RiCircleFill />, 
+        usage: 'Terminal points', 
+        defaultLabel: 'Terminal',
+        svgPath: 'M50,50 m-40,0 a40,40 0 1,0 80,0 a40,40 0 1,0 -80,0',
+        width: 100,
+        height: 100
+      }
     ],
     dragData: { type: 'terminal' }
   },
@@ -38,9 +56,36 @@ const shapeLibrary = {
     title: "Process",
     icon: <RiSquareFill />,
     shapes: [
-      { id: 'rectangle', name: 'Rectangle', icon: <RiSquareFill />, usage: 'Processing steps', defaultLabel: 'Process Step' },
-      { id: 'rounded-rectangle', name: 'Rounded Rectangle', icon: <RiSquareFill />, usage: 'Calculations, transformations', defaultLabel: 'Calculation' },
-      { id: 'hexagon', name: 'Hexagon', icon: <RiHexagonFill />, usage: 'Special processes', defaultLabel: 'Special Process' }
+      { 
+        id: 'rectangle', 
+        name: 'Rectangle', 
+        icon: <RiSquareFill />, 
+        usage: 'Processing steps', 
+        defaultLabel: 'Process Step',
+        svgPath: 'M10,10 L190,10 L190,90 L10,90 Z',
+        width: 140,
+        height: 80
+      },
+      { 
+        id: 'rounded-rectangle', 
+        name: 'Rounded Rectangle', 
+        icon: <RiSquareFill />, 
+        usage: 'Calculations, transformations', 
+        defaultLabel: 'Calculation',
+        svgPath: 'M10,20 Q10,10 20,10 L180,10 Q190,10 190,20 L190,80 Q190,90 180,90 L20,90 Q10,90 10,80 Z',
+        width: 140,
+        height: 80
+      },
+      { 
+        id: 'hexagon', 
+        name: 'Hexagon', 
+        icon: <RiHexagonFill />, 
+        usage: 'Special processes', 
+        defaultLabel: 'Special Process',
+        svgPath: 'M50,10 L150,10 L180,50 L150,90 L50,90 L20,50 Z',
+        width: 140,
+        height: 80
+      }
     ],
     dragData: { type: 'process' }
   },
@@ -48,8 +93,26 @@ const shapeLibrary = {
     title: "Decision",
     icon: <RiVipDiamondFill />,
     shapes: [
-      { id: 'diamond', name: 'Diamond', icon: <RiVipDiamondFill />, usage: 'Conditional logic, branching', defaultLabel: 'Decision?' },
-      { id: 'rhombus', name: 'Rhombus', icon: <RiVipDiamondFill />, usage: 'Alternative decisions', defaultLabel: 'Alternative?' }
+      { 
+        id: 'diamond', 
+        name: 'Diamond', 
+        icon: <RiVipDiamondFill />, 
+        usage: 'Conditional logic, branching', 
+        defaultLabel: 'Decision?',
+        svgPath: 'M100,10 L190,50 L100,90 L10,50 Z',
+        width: 140,
+        height: 80
+      },
+      { 
+        id: 'rhombus', 
+        name: 'Rhombus', 
+        icon: <RiVipDiamondFill />, 
+        usage: 'Alternative decisions', 
+        defaultLabel: 'Alternative?',
+        svgPath: 'M100,10 L190,50 L100,90 L10,50 Z',
+        width: 140,
+        height: 80
+      }
     ],
     dragData: { type: 'decision' }
   },
@@ -57,9 +120,36 @@ const shapeLibrary = {
     title: "Data",
     icon: <RiDatabaseFill />,
     shapes: [
-      { id: 'parallelogram', name: 'Parallelogram', icon: <RiFileTextFill />, usage: 'Data input/output', defaultLabel: 'Data I/O' },
-      { id: 'cylinder', name: 'Cylinder', icon: <RiDatabaseFill />, usage: 'Database operations', defaultLabel: 'Database' },
-      { id: 'document', name: 'Document', icon: <RiFileTextFill />, usage: 'File operations', defaultLabel: 'File' }
+      { 
+        id: 'parallelogram', 
+        name: 'Parallelogram', 
+        icon: <RiFileTextFill />, 
+        usage: 'Data input/output', 
+        defaultLabel: 'Data I/O',
+        svgPath: 'M30,10 L170,10 L150,90 L10,90 Z',
+        width: 140,
+        height: 80
+      },
+      { 
+        id: 'cylinder', 
+        name: 'Cylinder', 
+        icon: <RiDatabaseFill />, 
+        usage: 'Database operations', 
+        defaultLabel: 'Database',
+        svgPath: 'M20,30 Q20,20 50,20 L150,20 Q180,20 180,30 L180,70 Q180,80 150,80 L50,80 Q20,80 20,70 Z M20,30 L20,70',
+        width: 140,
+        height: 80
+      },
+      { 
+        id: 'document', 
+        name: 'Document', 
+        icon: <RiFileTextFill />, 
+        usage: 'File operations', 
+        defaultLabel: 'File',
+        svgPath: 'M10,10 L10,90 L190,90 L190,30 L170,10 Z M170,10 L170,30 L190,30',
+        width: 140,
+        height: 80
+      }
     ],
     dragData: { type: 'data' }
   },
@@ -67,8 +157,26 @@ const shapeLibrary = {
     title: "External",
     icon: <RiCloudFill />,
     shapes: [
-      { id: 'cloud', name: 'Cloud', icon: <RiCloudFill />, usage: 'External services', defaultLabel: 'External Service' },
-      { id: 'service', name: 'Service', icon: <RiCloudFill />, usage: 'API calls', defaultLabel: 'API Call' }
+      { 
+        id: 'cloud', 
+        name: 'Cloud', 
+        icon: <RiCloudFill />, 
+        usage: 'External services', 
+        defaultLabel: 'External Service',
+        svgPath: 'M30,50 Q30,30 50,30 Q60,20 80,20 Q100,20 110,30 Q130,30 130,50 Q130,70 110,70 L50,70 Q30,70 30,50 Z',
+        width: 140,
+        height: 80
+      },
+      { 
+        id: 'service', 
+        name: 'Service', 
+        icon: <RiCloudFill />, 
+        usage: 'API calls', 
+        defaultLabel: 'API Call',
+        svgPath: 'M20,40 Q20,20 40,20 Q50,10 70,10 Q90,10 100,20 Q120,20 120,40 Q120,60 100,60 L40,60 Q20,60 20,40 Z',
+        width: 140,
+        height: 80
+      }
     ],
     dragData: { type: 'cloud' }
   }
@@ -101,46 +209,67 @@ const LeftPanel: React.FC = () => {
     console.log("Shape selected:", shape);
   };
 
-  // Handle shape drag start
+  // Enhanced handle shape drag start with proper data format
   const handleShapeDragStart = (shape: any, event: React.DragEvent) => {
     console.log("Shape drag started:", shape);
 
     // Reset the dataTransfer object first
     event.dataTransfer.clearData();
 
-    // Set the drag data for the shape
+    // Set the drag data for the shape with complete information
     try {
-      const shapeData = JSON.stringify({
+      const shapeData = {
         id: shape.id,
         name: shape.name,
-        type: shape.type || 'shape',
+        type: 'shape',
         defaultLabel: shape.defaultLabel || shape.name,
-        category: shape.category
-      });
+        category: shape.category,
+        svgPath: shape.svgPath,
+        width: shape.width || 140,
+        height: shape.height || 80,
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        borderWidth: 2
+      };
       
-      event.dataTransfer.setData("application/json", shapeData);
-      event.dataTransfer.setData("text/plain", shapeData);
+      event.dataTransfer.setData("application/json", JSON.stringify(shapeData));
+      event.dataTransfer.setData("text/plain", JSON.stringify(shapeData));
       event.dataTransfer.setData("application/reactflow", `shape:${shape.id}`);
 
-      // Set drag image
-      if (shape.icon) {
-        const tempElement = document.createElement("div");
-        tempElement.innerHTML = `<div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #ccc; border-radius: 4px;">${shape.name}</div>`;
-        tempElement.style.position = "fixed";
-        tempElement.style.top = "0";
-        tempElement.style.left = "0";
-        tempElement.style.zIndex = "9999";
-        tempElement.style.pointerEvents = "none";
-        document.body.appendChild(tempElement);
+      // Create a better drag image
+      const tempElement = document.createElement("div");
+      tempElement.innerHTML = `
+        <div style="
+          width: 60px; 
+          height: 40px; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          background: white; 
+          border: 2px solid #3b82f6; 
+          border-radius: 6px;
+          font-size: 10px;
+          font-weight: 500;
+          color: #374151;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        ">
+          ${shape.name}
+        </div>
+      `;
+      tempElement.style.position = "fixed";
+      tempElement.style.top = "-1000px";
+      tempElement.style.left = "-1000px";
+      tempElement.style.zIndex = "9999";
+      tempElement.style.pointerEvents = "none";
+      document.body.appendChild(tempElement);
 
-        event.dataTransfer.setDragImage(tempElement, 20, 20);
+      event.dataTransfer.setDragImage(tempElement, 30, 20);
 
-          setTimeout(() => {
-            if (document.body.contains(tempElement)) {
-              document.body.removeChild(tempElement);
-            }
-          }, 100);
-      }
+      setTimeout(() => {
+        if (document.body.contains(tempElement)) {
+          document.body.removeChild(tempElement);
+        }
+      }, 100);
 
       event.dataTransfer.effectAllowed = "copy";
     } catch (error) {
@@ -167,7 +296,7 @@ const LeftPanel: React.FC = () => {
     // You can emit this to the canvas to change the default connection style
   };
 
-  // Render shape category
+  // Render shape category with improved styling
   const renderShapeCategory = (categoryKey: string, category: any) => {
     const isExpanded = expandedCategories[categoryKey];
     
@@ -197,7 +326,16 @@ const LeftPanel: React.FC = () => {
                 onClick={() => handleShapeSelect(shape)}
                 title={shape.usage}
               >
-                <div className="shape-icon">{shape.icon}</div>
+                <div className="shape-icon">
+                  <svg width="32" height="24" viewBox="0 0 200 100" style={{ overflow: 'visible' }}>
+                    <path 
+                      d={shape.svgPath} 
+                      fill="none" 
+                      stroke="#3b82f6" 
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </div>
                 <div className="shape-name">{shape.name}</div>
                 <div className="shape-usage">{shape.usage}</div>
               </div>

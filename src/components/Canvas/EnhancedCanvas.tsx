@@ -434,6 +434,7 @@ const EnhancedCanvas: React.FC = () => {
         const reactFlowBounds =
           reactFlowWrapper.current.getBoundingClientRect();
         const type = event.dataTransfer.getData("application/reactflow");
+        const jsonData = event.dataTransfer.getData("application/json");
 
         // Check if the dropped element is a node
         if (typeof type === "string" && type) {
@@ -442,33 +443,58 @@ const EnhancedCanvas: React.FC = () => {
             y: event.clientY - reactFlowBounds.top,
           });
 
+          // Parse the shape data
+          let shapeData: any = {};
+          try {
+            if (jsonData) {
+              shapeData = JSON.parse(jsonData);
+            }
+          } catch (error) {
+            console.error("Error parsing shape data:", error);
+          }
+
           // Create shape data based on dropped type
           let nodeData: ShapeNodeData | PureSVGNodeData;
           let nodeType: string;
-          let backgroundColor = "#ffffff";
-          let borderColor = "#000000";
-          let borderWidth = 2;
+          let backgroundColor = shapeData.backgroundColor || "#ffffff";
+          let borderColor = shapeData.borderColor || "#000000";
+          let borderWidth = shapeData.borderWidth || 2;
+          let nodeWidth = shapeData.width || 140;
+          let nodeHeight = shapeData.height || 80;
 
           // Use PureSVGNode for shapes to get clean rendering
           if (type.includes("shape:")) {
             const shapeType = type.split(":")[1]; // Extract shape type
             nodeType = "pureSvg";
+            
+            // Create SVG content based on shape type
+            let svgContent = '';
+            if (shapeData.svgPath) {
+              svgContent = `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="${shapeData.svgPath}" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" />
+                <text x="100" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#333">${shapeData.defaultLabel || shapeData.name}</text>
+              </svg>`;
+            } else {
+              // Fallback SVG
+              svgContent = `<svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="10" width="180" height="80" fill="${backgroundColor}" stroke="${borderColor}" stroke-width="${borderWidth}" rx="5" />
+                <text x="100" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#333">${shapeData.defaultLabel || shapeData.name}</text>
+              </svg>`;
+            }
+
             const pureSvgNodeData: PureSVGNodeData = {
-              svgContent: `<svg viewBox="0 0 100 100"><rect width="100" height="100" /></svg>`,
-              label: `${shapeType.charAt(0).toUpperCase() + shapeType.slice(1)}`,
+              svgContent,
+              label: shapeData.defaultLabel || shapeData.name || `${shapeType.charAt(0).toUpperCase() + shapeType.slice(1)}`,
               fill: backgroundColor,
               stroke: borderColor,
               strokeWidth: borderWidth,
             };
             nodeData = pureSvgNodeData;
-            backgroundColor = pureSvgNodeData.fill || backgroundColor;
-            borderColor = pureSvgNodeData.stroke || borderColor;
-            borderWidth = pureSvgNodeData.strokeWidth || borderWidth;
           } else {
             // Fallback to regular shape node for other types
             nodeType = "shapeNode";
             nodeData = {
-              label: "Node",
+              label: shapeData.defaultLabel || shapeData.name || "Node",
               shape: type,
             } as ShapeNodeData;
           }
@@ -485,8 +511,8 @@ const EnhancedCanvas: React.FC = () => {
               : position,
             data: nodeData,
             style: {
-              width: 150,
-              height: 75,
+              width: nodeWidth,
+              height: nodeHeight,
               backgroundColor,
               borderColor,
               borderWidth,
